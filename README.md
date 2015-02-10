@@ -7,6 +7,7 @@ and then issues commands to access resources in the API (https://www.mkmapi.eu/w
 
 
 Usage: 
+
        MKM <CMD> <RESOURCE> [-f FILE] [DATA]
 
 Availible CMD: GET, PUT, POST, DEL
