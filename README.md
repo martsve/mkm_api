@@ -6,8 +6,8 @@ You provide the program with accesss tokens (https://www.magiccardmarket.eu/?mai
 and then issues commands to access resources in the API (https://www.mkmapi.eu/ws/documentation/API_1.1:Main_Page)
 
 
-Usage: MKM <CMD> <RESOURCE> [-f FILE] [DATA]
-
+Usage: 
+       MKM <CMD> <RESOURCE> [-f FILE] [DATA]
 
 Availible CMD: GET, PUT, POST, DEL
 For resources check https://www.mkmapi.eu/ws/documentation/API_1.1:Main_Page
@@ -25,15 +25,15 @@ fill in the created tokens.txt file:
       Access token secret=YOUR ACCESS TOKEN SECRET
 
 Examples:
-
-  MKM GET account
-
-  MKM GET stock/1
-
-  MKM DEL shoppingcart
-
-  MKM GET orders/2/8 > received.txt
-  
+      
+        MKM GET account
+      
+        MKM GET stock/1
+      
+        MKM DEL shoppingcart
+      
+        MKM GET orders/2/8 > received.txt
+        
 4 .bat files are included, with simple functionality:
 
   * empty_cart.bat - empties your shopping cart
