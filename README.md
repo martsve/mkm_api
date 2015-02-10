@@ -11,9 +11,11 @@ Usage:
        MKM <CMD> <RESOURCE> [-f FILE] [DATA]
 
 Availible CMD: GET, PUT, POST, DEL
+
 For resources check https://www.mkmapi.eu/ws/documentation/API_1.1:Main_Page
 
 PUT and POST requires data, from either a file (-f) or given text (DATA).
+
 All data should be given/received as UTF8
 
 If tokens.txt does not exist, the program will pause while it waits for you to
