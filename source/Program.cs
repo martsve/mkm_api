@@ -218,7 +218,7 @@ Access token secret=
 
                 catch (System.Net.WebException ex)
                 {
-                    Console.WriteLine("Error: " + ex);
+                    Console.WriteLine("Error: " + ex.Message);
                     response = ex.Response as HttpWebResponse;
                     if (response.StatusCode == HttpStatusCode.Unauthorized)
                     {
@@ -232,7 +232,7 @@ Access token secret = '{3}'", Tokens.appToken, Tokens.appSecret, Tokens.accessTo
 
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Error: " + ex);
+                    Console.WriteLine("Error: " + ex.Message);
                     return "";
                 }
 
