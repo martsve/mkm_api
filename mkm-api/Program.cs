@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,10 +13,11 @@ namespace Database
 {
     partial class Program
     {
-    
+
         static void Main(string[] args)
         {
-            if (args.Length < 2) {
+            if (args.Length < 2)
+            {
                 Console.WriteLine(@"
 Usage: MKM <CMD> <RESOURCE> [-f FILE] [DATA]
 
@@ -52,7 +53,7 @@ Examples:
                 string res = args.Length > 1 ? args[1] : "";
 
                 RequestHelper req = new RequestHelper();
-                string respons = req.makeRequest(res, method); 
+                string respons = req.makeRequest(res, method);
                 Console.WriteLine(respons);
             }
 
@@ -81,7 +82,7 @@ Examples:
                     data = File.ReadAllText(args[3]);
 
                 RequestHelper req = new RequestHelper();
-                string respons = req.makeRequest(res, method, data.TrimEnd()); 
+                string respons = req.makeRequest(res, method, data.TrimEnd());
                 Console.WriteLine(respons);
             }
 
@@ -91,12 +92,15 @@ Examples:
                 string res = args.Length > 1 ? args[1] : "";
 
                 RequestHelper req = new RequestHelper();
-                string respons = req.makeRequest(res, method); 
+                string respons = req.makeRequest(res, method);
                 Console.WriteLine(respons);
             }
-            
+
             else Console.WriteLine("Error: Invalid command (get/post/put/del): " + larg);
 
+#if DEBUG
+            Console.ReadKey();
+#endif
         }
 
 
@@ -132,18 +136,18 @@ Access token secret=
                 foreach (string s in lines)
                 {
                     if (s.StartsWith("URL="))
-                        url = s.Split('=')[1].Trim().Replace("\r", "").Replace("\n", "");
+                        url = clean(s.Split('=')[1]);
                     if (s.StartsWith("App token="))
-                        appToken = s.Split('=')[1].Trim().Replace("\r", "").Replace("\n", "");
+                        appToken = clean(s.Split('=')[1]);
                     if (s.StartsWith("App secret="))
-                        appSecret = s.Split('=')[1].Trim().Replace("\r", "").Replace("\n", "");
+                        appSecret = clean(s.Split('=')[1]);
                     if (s.StartsWith("Access token="))
-                        accessToken = s.Split('=')[1].Trim().Replace("\r", "").Replace("\n", "");
+                        accessToken = clean(s.Split('=')[1]);
                     if (s.StartsWith("Access token secret="))
-                        accessSecret = s.Split('=')[1].Trim().Replace("\r", "").Replace("\n", "");
+                        accessSecret = clean(s.Split('=')[1]);
                 }
 
-                if (appToken.Length == 0) Error("No apptoken given in "+filename);
+                if (appToken.Length == 0) Error("No apptoken given in " + filename);
                 if (appSecret.Length == 0) Error("No appSecret given in " + filename);
                 if (accessToken.Length == 0) Error("No accessToken given in " + filename);
                 if (accessSecret.Length == 0) Error("No accessSecret given in " + filename);
@@ -151,7 +155,14 @@ Access token secret=
 
             }
 
-
+            static string clean(string text)
+            {
+                text = text.Replace("\r", "").Replace("\n", "");
+                text = text.Replace("\t", "");
+                text = text.Replace("\"", "");
+                text = text.Replace("'", "");
+                return text.Trim();
+            }
             static void Error(string msg)
             {
                 Console.WriteLine("Error: " + msg);
@@ -166,10 +177,10 @@ Access token secret=
         {
             public XmlDocument makeXMLRequest(string resource, String method = "GET", String postData = "")
             {
-                    XmlDocument doc = new XmlDocument();
-                    string res = makeRequest(resource, method = "GET", postData = "");
-                    doc.Load(res);
-                    return doc;
+                XmlDocument doc = new XmlDocument();
+                string res = makeRequest(resource, method = "GET", postData = "");
+                doc.Load(res);
+                return doc;
             }
 
             public string makeRequest(string resource, String method = "GET", String postData = "")
@@ -188,25 +199,36 @@ Access token secret=
                 {
                     XmlDocument soapEnvelopeXml = new XmlDocument();
                     soapEnvelopeXml.LoadXml(postData);
-                    using (Stream stream = request.GetRequestStream()) 
-                    { 
-                        soapEnvelopeXml.Save(stream); 
+                    using (Stream stream = request.GetRequestStream())
+                    {
+                        soapEnvelopeXml.Save(stream);
                     }
 
                     request.ContentType = "text/xml;charset=\"utf-8\"";
-                    request.Accept = "text/xml"; 
+                    request.Accept = "text/xml";
                 }
 
                 HttpWebResponse response;
                 try
                 {
                     response = request.GetResponse() as HttpWebResponse;
+
+
                     byte[] b = ReadFully(response.GetResponseStream());
                     return Encoding.UTF8.GetString(b, 0, b.Length);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Error: "+ex.Message);
+                    Console.WriteLine("Error: " + ex.Message);
+
+                    if (ex.Message == "The remote server returned an error: (401) Unauthorized.")
+                    {
+                        Console.WriteLine(@"App token = '{0}'
+App secret = '{1}'
+Access token = '{2}'
+Access token secret = '{3}'", Tokens.appToken, Tokens.appSecret, Tokens.accessToken, Tokens.accessSecret);
+                    }
+                    
                     return "";
                 }
 
@@ -254,13 +276,13 @@ Access token secret=
                 //String nonce = "53eb1f44909d6";
                 String timestamp = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds.ToString();
                 // String timestamp = "1407917892";
-               
+
                 /// Initialize all class members
                 this.appToken = Tokens.appToken;
                 this.appSecret = Tokens.appSecret;
                 this.accessToken = Tokens.accessToken;
                 this.accessSecret = Tokens.accessSecret;
-                
+
                 this.headerParams = new Dictionary<String, String>();
                 this.headerParams.Add("oauth_consumer_key", this.appToken);
                 this.headerParams.Add("oauth_token", this.accessToken);
@@ -329,5 +351,5 @@ Access token secret=
         }
 
     }
-    
+
 }

@@ -1,0 +1,6 @@
+URL=https://www.mkmapi.eu/ws/v1.1/
+App token=a
+App secret=a
+Access token= a 
+Access token secret= a asd
+
