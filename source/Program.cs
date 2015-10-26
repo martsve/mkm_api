@@ -16,6 +16,9 @@ namespace Database
 
         static void Main(string[] args)
         {
+
+            System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
+
             if (args.Length < 2)
             {
                 Console.WriteLine(@"
