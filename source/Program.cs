@@ -212,26 +212,29 @@ Access token secret=
                 try
                 {
                     response = request.GetResponse() as HttpWebResponse;
-
-
                     byte[] b = ReadFully(response.GetResponseStream());
                     return Encoding.UTF8.GetString(b, 0, b.Length);
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error: " + ex.Message);
 
-                    if (ex.Message == "The remote server returned an error: (401) Unauthorized.")
+                catch (System.Net.WebException ex)
+                {
+                    Console.WriteLine("Error: " + ex);
+                    response = ex.Response as HttpWebResponse;
+                    if (response.StatusCode == HttpStatusCode.Unauthorized)
                     {
                         Console.WriteLine(@"App token = '{0}'
 App secret = '{1}'
 Access token = '{2}'
 Access token secret = '{3}'", Tokens.appToken, Tokens.appSecret, Tokens.accessToken, Tokens.accessSecret);
                     }
-                    
                     return "";
                 }
 
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error: " + ex);
+                    return "";
+                }
 
             }
 
