@@ -1,20 +1,22 @@
 # mkm_api
-MagicCardMarket API 1.1 accesser
+MagicCardMarket API 1.1/2.0 accessor
 
-This program is a simple executable file to communicate simply with the MKM API v1.1. 
+This program is a simple executable file to communicate simply with the MKM API v1.1/v2.0 (An Oauth wrapper). 
 You provide the program with accesss tokens (https://www.magiccardmarket.eu/?mainPage=showMyAccount)
-and then issues commands to access resources in the API (https://www.mkmapi.eu/ws/documentation/API_1.1:Main_Page)
+and then issues commands to access resources in the API
 
+For resources check https://www.mkmapi.eu/ws/documentation/API_1.1:Main_Page
+ or the Sandbox for API 2.0: https://www.mkmapi.eu/ws/documentation/API_2.0:Main_Page
 
 Usage: 
 
-       MKM <CMD> <RESOURCE> [-f FILE] [DATA]
+       MKM [-j] <CMD> <RESOURCE> [-f FILE] [DATA]
 
 Availible CMD: GET, PUT, POST, DEL
 
-For resources check https://www.mkmapi.eu/ws/documentation/API_1.1:Main_Page
-
 PUT and POST requires data, from either a file (-f) or given text (DATA).
+
+Use -j option to receive JSON.
 
 All data should be given/received as UTF8
 
