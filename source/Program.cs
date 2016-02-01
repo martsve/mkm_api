@@ -22,13 +22,15 @@ namespace Database
             if (args.Length < 2)
             {
                 Console.WriteLine(@"
-Usage: MKM <CMD> <RESOURCE> [-f FILE] [DATA]
+Usage: MKM [-j] <CMD> <RESOURCE> [-f FILE] [DATA]
 
 Availible CMD: GET, PUT, POST, DEL
 PUT and POST requires data, from either a file (-f) or given text (DATA).
-For resources check https://www.mkmapi.eu/ws/documentation/API_1.1:Main_Page
+For resources check https://www.mkmapi.eu/ws/documentation/API_2.0:Main_Page
 
-All data should be given/received as UTF8
+All data should be given/received as UTF8.
+
+Use -j option to receive JSON.
 
 If tokens.txt does not exist, the program will pause while it waits for you to
 fill in the created tokens.txt file
@@ -48,57 +50,31 @@ Examples:
 
             Tokens.Init();
 
-            string larg = args[0].Trim().ToLower();
-
-            if (larg == "get")
+            int argN = 0;
+            bool requestJson = false;
+            if (args[0].Trim().ToLower() == "-j")
             {
-                string method = "GET";
-                string res = args.Length > 1 ? args[1] : "";
+                requestJson = true;
+                argN++;
+            }
 
+            string larg = args[argN].Trim().ToLower();
+
+            string res = args.Length > argN + 1 ? args[argN + 1] : "";
+            string data = args.Length > argN + 2 ? args[argN + 2] : "";
+
+            if (data.Trim().ToLower() == "-f" && args.Length > argN + 3)
+                data = File.ReadAllText(args[argN + 3]).TrimEnd();
+
+            if (requestJson)
+                res = "output.json/" + res;
+
+            if (RequestTypes.ContainsKey(larg)) {
+                string method = RequestTypes[larg];
                 RequestHelper req = new RequestHelper();
                 string respons = req.makeRequest(res, method);
                 Console.WriteLine(respons);
             }
-
-            else if (larg == "post")
-            {
-                string method = "POST";
-                string res = args.Length > 1 ? args[1] : "";
-                string data = args.Length > 2 ? args[2] : "";
-
-                if (data.Trim().ToLower() == "-f" && args.Length > 3)
-                    data = File.ReadAllText(args[3]);
-
-                RequestHelper req = new RequestHelper();
-                string respons = req.makeRequest(res, method, data.TrimEnd());
-                Console.WriteLine(respons);
-            }
-
-
-            else if (larg == "put")
-            {
-                string method = "PUT";
-                string res = args.Length > 1 ? args[1] : "";
-                string data = args.Length > 2 ? args[2] : "";
-
-                if (data.Trim().ToLower() == "-f" && args.Length > 3)
-                    data = File.ReadAllText(args[3]);
-
-                RequestHelper req = new RequestHelper();
-                string respons = req.makeRequest(res, method, data.TrimEnd());
-                Console.WriteLine(respons);
-            }
-
-            else if (larg == "del")
-            {
-                string method = "DELETE";
-                string res = args.Length > 1 ? args[1] : "";
-
-                RequestHelper req = new RequestHelper();
-                string respons = req.makeRequest(res, method);
-                Console.WriteLine(respons);
-            }
-
             else Console.WriteLine("Error: Invalid command (get/post/put/del): " + larg);
 
 #if DEBUG
@@ -106,7 +82,14 @@ Examples:
 #endif
         }
 
-
+        private static Dictionary<string, string> RequestTypes = new Dictionary<string, string>()
+        {
+            { "get", "GET" },
+            { "post", "POST" },
+            { "put", "PUT" },
+            { "del", "DELETE" },
+            { "delete", "DELETE" },
+        };
 
 
         static public class Tokens
@@ -123,7 +106,7 @@ Examples:
                 {
                     using (System.IO.StreamWriter file = new System.IO.StreamWriter(filename))
                     {
-                        file.WriteLine(@"URL=https://www.mkmapi.eu/ws/v1.1/
+                        file.WriteLine(@"URL= https://www.mkmapi.eu/ws/v1.1/
 App token=
 App secret=
 Access token=
@@ -155,7 +138,6 @@ Access token secret=
                 if (accessToken.Length == 0) Error("No accessToken given in " + filename);
                 if (accessSecret.Length == 0) Error("No accessSecret given in " + filename);
                 if (url.Length == 0) Error("No url given in " + filename);
-
             }
 
             static string clean(string text)
@@ -178,14 +160,6 @@ Access token secret=
 
         class RequestHelper
         {
-            public XmlDocument makeXMLRequest(string resource, String method = "GET", String postData = "")
-            {
-                XmlDocument doc = new XmlDocument();
-                string res = makeRequest(resource, method = "GET", postData = "");
-                doc.Load(res);
-                return doc;
-            }
-
             public string makeRequest(string resource, String method = "GET", String postData = "")
             {
                 String url = Tokens.url + resource;
@@ -207,8 +181,8 @@ Access token secret=
                         soapEnvelopeXml.Save(stream);
                     }
 
-                    request.ContentType = "text/xml;charset=\"utf-8\"";
-                    request.Accept = "text/xml";
+                    request.ContentType = "application/xml;charset=\"utf-8\"";
+                    request.Accept = "application/json,application/xml";
                 }
 
                 HttpWebResponse response;
@@ -280,7 +254,7 @@ Access token secret = '{3}'", Tokens.appToken, Tokens.appSecret, Tokens.accessTo
             {
                 String nonce = Guid.NewGuid().ToString("n");
                 //String nonce = "53eb1f44909d6";
-                String timestamp = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds.ToString();
+                String timestamp = ((int)((DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds)).ToString();
                 // String timestamp = "1407917892";
 
                 /// Initialize all class members
@@ -298,6 +272,7 @@ Access token secret = '{3}'", Tokens.appToken, Tokens.appSecret, Tokens.accessTo
                 this.headerParams.Add("oauth_version", this.version);
             }
 
+
             /// <summary>
             /// Pass request method and URI parameters to get the Authorization header value
             /// </summary>
@@ -306,20 +281,37 @@ Access token secret = '{3}'", Tokens.appToken, Tokens.appSecret, Tokens.accessTo
             /// <returns>Authorization header value</returns>
             public String getAuthorizationHeader(String method, String url)
             {
+                var URIparts = url.Split('?');
+                string baseURI = URIparts[0];
+
                 /// Add the realm parameter to the header params
-                this.headerParams.Add("realm", url);
+                //string realm = new Uri(url).Host;
+                string realm = baseURI;
+
+                this.headerParams.Add("realm", realm);
 
                 /// Start composing the base string from the method and request URI
-                String baseString = method.ToUpper()
+                string baseString = method.ToUpper()
                                   + "&"
-                                  + Uri.EscapeDataString(url)
+                                  + Uri.EscapeDataString(baseURI)
                                   + "&";
+
+
+                string[] requestParameters = URIparts.Count() > 1 ? URIparts[1].Split('&') : new string[] { };
+                foreach (var parameter in requestParameters)
+                {
+                    var parts = parameter.Split('=');
+                    string key = parts[0];
+                    string value = parts.Count() > 1 ? parts[1] : "";
+                    headerParams.Add(key, value);
+                }
+
 
                 /// Gather, encode, and sort the base string parameters
                 SortedDictionary<String, String> encodedParams = new SortedDictionary<String, String>();
-                foreach (KeyValuePair<String, String> parameter in this.headerParams)
+                foreach (var parameter in this.headerParams)
                 {
-                    if (false == parameter.Key.Equals("realm"))
+                    if (!parameter.Key.Equals("realm"))
                     {
                         encodedParams.Add(Uri.EscapeDataString(parameter.Key), Uri.EscapeDataString(parameter.Value));
                     }
