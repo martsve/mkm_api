@@ -72,7 +72,7 @@ Examples:
             if (RequestTypes.ContainsKey(larg)) {
                 string method = RequestTypes[larg];
                 RequestHelper req = new RequestHelper();
-                string respons = req.makeRequest(res, method);
+                string respons = req.makeRequest(res, method, data);
                 Console.WriteLine(respons);
             }
             else Console.WriteLine("Error: Invalid command (get/post/put/del): " + larg);
