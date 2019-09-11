@@ -1,32 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Net;
-using System.Threading;
 using System.IO;
-
-using System.Xml;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography;
+using System.Text;
+using Newtonsoft.Json;
 
-namespace Database
+namespace MkmApi
 {
-    partial class Program
+    class Program
     {
+        private const string BaseUrl = "https://api.cardmarket.com/ws";
+        private const string DocUrl = "documentation/API_2.0:Main_Page";
+        private const string ApiUrl = "v2.0/";
 
-        static void Main(string[] args)
+        private static readonly Dictionary<string, HttpMethod> RequestTypes = new Dictionary<string, HttpMethod>()
         {
+            {"get", HttpMethod.Get },
+            {"post", HttpMethod.Post },
+            {"put", HttpMethod.Put },
+            {"del", HttpMethod.Delete },
+            {"delete", HttpMethod.Delete },
+        };
 
-            System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
+        public static void Error(string message)
+        {
+            Console.Error.WriteLine(message);
+            Environment.Exit(1);
+        }
+
+        public static void Main(string[] args)
+        {
+            System.Threading.Thread.CurrentThread.CurrentCulture =
+                System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
 
             if (args.Length < 2)
             {
-                Console.WriteLine(@"
+                Console.WriteLine($@"
 Usage: MKM [-j] <CMD> <RESOURCE> [-f FILE] [DATA]
 
 Availible CMD: GET, PUT, POST, DEL
 PUT and POST requires data, from either a file (-f) or given text (DATA).
-For resources check https://www.mkmapi.eu/ws/documentation/API_2.0:Main_Page
+For resources check {BaseUrl}/{DocUrl}
 
 All data should be given/received as UTF8.
 
@@ -45,12 +62,13 @@ Examples:
 
   MKM GET orders/2/8 > received.txt
                 ");
+
                 Environment.Exit(1);
             }
 
-            Tokens.Init();
+            var tokens = new Tokens();
 
-            int argN = 0;
+            var argN = 0;
             bool requestJson = false;
             if (args[0].Trim().ToLower() == "-j")
             {
@@ -58,55 +76,51 @@ Examples:
                 argN++;
             }
 
-            string larg = args[argN].Trim().ToLower();
 
-            string res = args.Length > argN + 1 ? args[argN + 1] : "";
-            string data = args.Length > argN + 2 ? args[argN + 2] : "";
+            var larg = args[argN].Trim().ToLower();
+
+            var res = args.Length > argN + 1 ? args[argN + 1] : "";
+            var data = args.Length > argN + 2 ? args[argN + 2] : "";
 
             if (data.Trim().ToLower() == "-f" && args.Length > argN + 3)
                 data = File.ReadAllText(args[argN + 3]).TrimEnd();
 
             if (requestJson)
+            {
                 res = "output.json/" + res;
-
-            if (RequestTypes.ContainsKey(larg)) {
-                string method = RequestTypes[larg];
-                RequestHelper req = new RequestHelper();
-                string respons = req.makeRequest(res, method, data);
-                Console.WriteLine(respons);
             }
-            else Console.WriteLine("Error: Invalid command (get/post/put/del): " + larg);
+            
+            if (!RequestTypes.ContainsKey(larg))
+            {
+                Error("Error: Invalid command (get/post/put/del): " + larg);
+
+            }
+
+            var method = RequestTypes[larg];
+            var req = new RequestHelper(tokens);
+            var respons = req.MakeRequest(res, method, data);
+            Console.WriteLine(respons);
 
 #if DEBUG
             Console.ReadKey();
 #endif
         }
-
-        private static Dictionary<string, string> RequestTypes = new Dictionary<string, string>()
+        
+        public class Tokens
         {
-            { "get", "GET" },
-            { "post", "POST" },
-            { "put", "PUT" },
-            { "del", "DELETE" },
-            { "delete", "DELETE" },
-        };
+            public string AppToken { get; set; } = "";
+            public string AppSecret { get; set; } = "";
+            public string AccessToken { get; set; } = "";
+            public string AccessSecret { get; set; } = "";
+            public string Url { get; set; } = "";
 
-
-        static public class Tokens
-        {
-            public static string appToken = "";
-            public static string appSecret = "";
-            public static string accessToken = "";
-            public static string accessSecret = "";
-            public static string url = "";
-
-            public static void Init(string filename = "tokens.txt")
+            public Tokens(string filename = "tokens.txt")
             {
                 if (!File.Exists(filename))
                 {
-                    using (System.IO.StreamWriter file = new System.IO.StreamWriter(filename))
+                    using (var file = new StreamWriter(filename))
                     {
-                        file.WriteLine(@"URL= https://www.mkmapi.eu/ws/v1.1/
+                        file.WriteLine($@"URL={BaseUrl}/{ApiUrl}
 App token=
 App secret=
 Access token=
@@ -114,33 +128,32 @@ Access token secret=
 ");
                     }
 
-                    Console.WriteLine("Please provide access tokens in tokens.txt. Push any key to continue");
-                    Console.ReadKey();
+                    Error("Please provide access tokens in tokens.txt.");
                 }
 
-                string[] lines = File.ReadAllLines(filename);
-                foreach (string s in lines)
+                var lines = File.ReadAllLines(filename).Select(x => x.Trim());
+                foreach (var s in lines)
                 {
                     if (s.StartsWith("URL="))
-                        url = clean(s.Split('=')[1]);
+                        Url = Clean(s.Split('=')[1]);
                     if (s.StartsWith("App token="))
-                        appToken = clean(s.Split('=')[1]);
+                        AppToken = Clean(s.Split('=')[1]);
                     if (s.StartsWith("App secret="))
-                        appSecret = clean(s.Split('=')[1]);
+                        AppSecret = Clean(s.Split('=')[1]);
                     if (s.StartsWith("Access token="))
-                        accessToken = clean(s.Split('=')[1]);
+                        AccessToken = Clean(s.Split('=')[1]);
                     if (s.StartsWith("Access token secret="))
-                        accessSecret = clean(s.Split('=')[1]);
+                        AccessSecret = Clean(s.Split('=')[1]);
                 }
 
-                if (appToken.Length == 0) Error("No apptoken given in " + filename);
-                if (appSecret.Length == 0) Error("No appSecret given in " + filename);
-                if (accessToken.Length == 0) Error("No accessToken given in " + filename);
-                if (accessSecret.Length == 0) Error("No accessSecret given in " + filename);
-                if (url.Length == 0) Error("No url given in " + filename);
+                if (AppToken.Length == 0) Error("No apptoken given in " + filename);
+                if (AppSecret.Length == 0) Error("No appSecret given in " + filename);
+                if (AccessToken.Length == 0) Error("No accessToken given in " + filename);
+                if (AccessSecret.Length == 0) Error("No accessSecret given in " + filename);
+                if (Url.Length == 0) Error("No url given in " + filename);
             }
 
-            static string clean(string text)
+            private string Clean(string text)
             {
                 text = text.Replace("\r", "").Replace("\n", "");
                 text = text.Replace("\t", "");
@@ -148,83 +161,63 @@ Access token secret=
                 text = text.Replace("'", "");
                 return text.Trim();
             }
-            static void Error(string msg)
-            {
-                Console.WriteLine("Error: " + msg);
-                Environment.Exit(1);
-            }
         }
 
-
-
-
-        class RequestHelper
+        public class RequestHelper
         {
-            public string makeRequest(string resource, String method = "GET", String postData = "")
+            private Tokens Tokens { get; }
+
+            public RequestHelper(Tokens tokens)
             {
-                String url = Tokens.url + resource;
-
-                System.Net.ServicePointManager.Expect100Continue = false;
-
-                HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
-
-                OAuthHeader header = new OAuthHeader();
-                request.Headers.Add(HttpRequestHeader.Authorization, header.getAuthorizationHeader(method, url));
-                request.Method = method;
-
-                if (postData.Length > 0 && (method == "POST" || method == "PUT"))
-                {
-                    XmlDocument soapEnvelopeXml = new XmlDocument();
-                    soapEnvelopeXml.LoadXml(postData);
-                    using (Stream stream = request.GetRequestStream())
-                    {
-                        soapEnvelopeXml.Save(stream);
-                    }
-
-                    request.ContentType = "application/xml;charset=\"utf-8\"";
-                    request.Accept = "application/json,application/xml";
-                }
-
-                HttpWebResponse response;
-                try
-                {
-                    response = request.GetResponse() as HttpWebResponse;
-                    byte[] b = ReadFully(response.GetResponseStream());
-                    return Encoding.UTF8.GetString(b, 0, b.Length);
-                }
-
-                catch (System.Net.WebException ex)
-                {
-                    Console.WriteLine("Error: " + ex.Message);
-                    response = ex.Response as HttpWebResponse;
-                    if (response.StatusCode == HttpStatusCode.Unauthorized)
-                    {
-                        Console.WriteLine(@"App token = '{0}'
-App secret = '{1}'
-Access token = '{2}'
-Access token secret = '{3}'", Tokens.appToken, Tokens.appSecret, Tokens.accessToken, Tokens.accessSecret);
-                    }
-                    return "";
-                }
-
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error: " + ex.Message);
-                    return "";
-                }
-
+                Tokens = tokens;
             }
 
-
-            public static byte[] ReadFully(Stream input)
+            public string MakeRequest(string resource, HttpMethod method, string postData)
             {
-                using (MemoryStream ms = new MemoryStream())
+                var url = Tokens.Url + resource;
+                var contentType = resource.Contains("output.json") ? "json" : "xml";
+
+                ServicePointManager.Expect100Continue = false;
+
+                using (var client = new HttpClient())
                 {
-                    input.CopyTo(ms);
-                    return ms.ToArray();
+                    var header = new OAuthHeader(Tokens);
+                    client.DefaultRequestHeaders.Add("Authorization", header.GetAuthorizationHeader(method, url));
+
+                    var request = new HttpRequestMessage(method, url);
+                    request.Headers.TryAddWithoutValidation("Accept", $"application/{contentType}");
+
+                    if (postData.Length > 0)
+                    {
+                        request.Content = new StringContent(postData, Encoding.UTF8, $"application/{contentType}");
+                    }
+
+                    HttpResponseMessage response = null;
+                    try
+                    {
+                        response = client.SendAsync(request).Result;
+                    }
+                    catch (Exception ex)
+                    {
+                        Error("Error: " + ex.Message);
+                    }
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Error($"Error: Server returned {response.StatusCode}: {response.ReasonPhrase}");
+                    }
+
+                    var result = response.Content.ReadAsStringAsync().Result;
+
+                    return contentType == "json" ? FormatJson(result) : result;
                 }
             }
 
+            private static string FormatJson(string json)
+            {
+                dynamic parsedJson = JsonConvert.DeserializeObject(json);
+                return JsonConvert.SerializeObject(parsedJson, Formatting.Indented);
+            }
         }
 
         /// <summary>
@@ -232,84 +225,62 @@ Access token secret = '{3}'", Tokens.appToken, Tokens.appSecret, Tokens.accessTo
         /// </summary>
         class OAuthHeader
         {
-            /// <summary>App Token</summary>
-            String appToken = "";
-            /// <summary>App Secret</summary>
-            String appSecret = "";
-            /// <summary>Access Token (Class should also implement an AccessToken property to set the value)</summary>
-            String accessToken = "";
-            /// <summary>Access Token Secret (Class should also implement an AccessToken property to set the value)</summary>
-            String accessSecret = "";
-            /// <summary>OAuth Signature Method</summary>
-            protected String signatureMethod = "HMAC-SHA1";
-            /// <summary>OAuth Version</summary>
-            protected String version = "1.0";
-            /// <summary>All Header params compiled into a Dictionary</summary>
-            protected IDictionary<String, String> headerParams;
+            private const string SignatureMethod = "HMAC-SHA1";
+            private const string Version = "1.0";
 
-            /// <summary>
-            /// Constructor
-            /// </summary>
-            public OAuthHeader()
+            private Tokens Tokens { get; }
+
+            private readonly IDictionary<string, string> _headerParams;
+
+            public OAuthHeader(Tokens tokens)
             {
-                String nonce = Guid.NewGuid().ToString("n");
-                //String nonce = "53eb1f44909d6";
-                String timestamp = ((int)((DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds)).ToString();
-                // String timestamp = "1407917892";
+                Tokens = tokens;
 
-                /// Initialize all class members
-                this.appToken = Tokens.appToken;
-                this.appSecret = Tokens.appSecret;
-                this.accessToken = Tokens.accessToken;
-                this.accessSecret = Tokens.accessSecret;
+                var nonce = Guid.NewGuid().ToString("n");
+                var timestamp = ((int) ((DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds)).ToString();
 
-                this.headerParams = new Dictionary<String, String>();
-                this.headerParams.Add("oauth_consumer_key", this.appToken);
-                this.headerParams.Add("oauth_token", this.accessToken);
-                this.headerParams.Add("oauth_nonce", nonce);
-                this.headerParams.Add("oauth_timestamp", timestamp);
-                this.headerParams.Add("oauth_signature_method", this.signatureMethod);
-                this.headerParams.Add("oauth_version", this.version);
+                _headerParams = new Dictionary<string, string>
+                {
+                    {"oauth_consumer_key", Tokens.AppToken},
+                    {"oauth_token", Tokens.AccessToken},
+                    {"oauth_nonce", nonce},
+                    {"oauth_timestamp", timestamp},
+                    {"oauth_signature_method", SignatureMethod},
+                    {"oauth_version", Version}
+                };
             }
-
-
+            
             /// <summary>
             /// Pass request method and URI parameters to get the Authorization header value
             /// </summary>
             /// <param name="method">Request Method</param>
             /// <param name="url">Request URI</param>
             /// <returns>Authorization header value</returns>
-            public String getAuthorizationHeader(String method, String url)
+            public string GetAuthorizationHeader(HttpMethod method, string url)
             {
-                var URIparts = url.Split('?');
-                string baseURI = URIparts[0];
+                var uriParts = url.Split('?');
+                var baseUri = uriParts[0];
 
-                /// Add the realm parameter to the header params
-                //string realm = new Uri(url).Host;
-                string realm = baseURI;
+                var realm = baseUri;
 
-                this.headerParams.Add("realm", realm);
+                _headerParams.Add("realm", realm);
 
-                /// Start composing the base string from the method and request URI
-                string baseString = method.ToUpper()
-                                  + "&"
-                                  + Uri.EscapeDataString(baseURI)
-                                  + "&";
+                var baseString = method.Method.ToUpper()
+                                 + "&"
+                                 + Uri.EscapeDataString(baseUri)
+                                 + "&";
 
-
-                string[] requestParameters = URIparts.Count() > 1 ? URIparts[1].Split('&') : new string[] { };
+                var requestParameters = uriParts.Count() > 1 ? uriParts[1].Split('&') : new string[] { };
                 foreach (var parameter in requestParameters)
                 {
                     var parts = parameter.Split('=');
-                    string key = parts[0];
-                    string value = parts.Count() > 1 ? parts[1] : "";
-                    headerParams.Add(key, value);
+                    var key = parts[0];
+                    var value = parts.Count() > 1 ? parts[1] : "";
+                    _headerParams.Add(key, value);
                 }
 
-
-                /// Gather, encode, and sort the base string parameters
-                SortedDictionary<String, String> encodedParams = new SortedDictionary<String, String>();
-                foreach (var parameter in this.headerParams)
+                var encodedParams = new SortedDictionary<string, string>();
+                foreach (var parameter in _headerParams)
                 {
                     if (!parameter.Key.Equals("realm"))
                     {
@@ -317,37 +288,25 @@ Access token secret = '{3}'", Tokens.appToken, Tokens.appSecret, Tokens.accessTo
                     }
                 }
 
-                /// Expand the base string by the encoded parameter=value pairs
-                List<String> paramStrings = new List<String>();
-                foreach (KeyValuePair<String, String> parameter in encodedParams)
-                {
-                    paramStrings.Add(parameter.Key + "=" + parameter.Value);
-                }
-                String paramString = Uri.EscapeDataString(String.Join<String>("&", paramStrings));
+                var paramStrings = encodedParams.Select(parameter => parameter.Key + "=" + parameter.Value).ToList();
+                var paramString = Uri.EscapeDataString(string.Join<string>("&", paramStrings));
                 baseString += paramString;
 
-                /// Create the OAuth signature
-                String signatureKey = Uri.EscapeDataString(this.appSecret) + "&" + Uri.EscapeDataString(this.accessSecret);
-                HMAC hasher = HMACSHA1.Create();
+                var signatureKey = Uri.EscapeDataString(Tokens.AppSecret) + "&" + Uri.EscapeDataString(Tokens.AccessSecret);
+                var hasher = HMAC.Create();
                 hasher.Key = Encoding.UTF8.GetBytes(signatureKey);
-                Byte[] rawSignature = hasher.ComputeHash(Encoding.UTF8.GetBytes(baseString));
-                String oAuthSignature = Convert.ToBase64String(rawSignature);
+                var rawSignature = hasher.ComputeHash(Encoding.UTF8.GetBytes(baseString));
+                var oAuthSignature = Convert.ToBase64String(rawSignature);
 
-                /// Include the OAuth signature parameter in the header parameters array
-                this.headerParams.Add("oauth_signature", oAuthSignature);
+                _headerParams.Add("oauth_signature", oAuthSignature);
 
-                /// Construct the header string
-                List<String> headerParamStrings = new List<String>();
-                foreach (KeyValuePair<String, String> parameter in this.headerParams)
-                {
-                    headerParamStrings.Add(parameter.Key + "=\"" + parameter.Value + "\"");
-                }
-                String authHeader = "OAuth " + String.Join<String>(", ", headerParamStrings);
+                var headerParamStrings =
+                    _headerParams.Select(parameter => parameter.Key + "=\"" + parameter.Value + "\"").ToList();
+
+                var authHeader = "OAuth " + string.Join<string>(", ", headerParamStrings);
 
                 return authHeader;
             }
         }
-
     }
-
 }
