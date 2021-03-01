@@ -1,0 +1,46 @@
+* {
+    box-sizing: border-box;
+    font-size: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+input {
+    padding: 1em;
+    border-radius: 0.1em;
+    border: 0.1em solid #cccccc;
+    background-color: white;
+}
+
+button {
+    padding: 1em;
+    border-radius: 0.1em;
+    background-color: #cccccc;
+    width: 10em;
+}
+
+button:active {
+    background: #e5e5e5;
+    -webkit-box-shadow: inset 0px 0px 5px #c1c1c1;
+        -moz-box-shadow: inset 0px 0px 5px #c1c1c1;
+            box-shadow: inset 0px 0px 5px #c1c1c1;
+    outline: none;
+}
+button[type=submit] {
+    padding: 1em;
+    border-radius: 0.1em;
+    background-color: #ccffcc;
+}
+
+.tokenForm {
+    margin: 1em;
+}
+.tokenForm .form-row {
+    margin-bottom: 0.5em;
+}
+.tokenForm .form-row span {
+    width: 10em;
+    display: inline-block;
+}

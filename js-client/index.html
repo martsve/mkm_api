@@ -1,0 +1,78 @@
+<html>
+
+<head>
+    <link rel="icon" type="image/png" href="cardmarket.png">
+    <script src="vue.min.js"></script>    
+    <script type="text/javascript" src="crypto.js"></script>
+    <script src="crypto.js"></script>
+    <script type="module" src="main.js"></script>
+    <script type="module" src="mkmapi.js"></script>
+    <script type="module">
+        import main from './main.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            main();
+        });
+    </script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="app">
+        <div class="tokenForm">
+            <form onsubmit="event.preventDefault(); return false;">
+                <div class="form-row">
+                    <label>
+                        <span>App Token</span>
+                        <input v-model="token.AppToken" placeholder="App Token">
+                    </label>
+                </div>
+                <div class="form-row">
+                    <label>
+                        <span>AppSecret</span>
+                        <input v-model="token.AppSecret" placeholder="AppSecret">
+                    </label>
+                </div>
+
+                <div class="form-row">
+                    <label>
+                        <span>AccessToken</span>
+                        <input v-model="token.AccessToken" placeholder="AccessToken">
+                    </label>
+                </div>
+
+                <div class="form-row">
+                    <label>
+                        <span>AccessSecret</span>
+                        <input v-model="token.AccessSecret" placeholder="AccessSecret">
+                    </label>
+                </div>
+
+                <div class="form-row">
+                    <label>
+                        <span>Url</span>
+                        <input v-model="token.Url" placeholder="Url">
+                    </label>
+                </div>
+
+                <div class="form-row">
+                    <span></span>
+                    <button type="submit" v-on:click="saveToken">Save token</button>
+                </div>
+
+                <div class="form-row">
+                    <span></span>
+                    <button v-on:click="resetToken">Reset</button>
+                </div>
+                
+                <div class="form-row">
+                    <span></span>
+                    <button type="submit" v-on:click="testToken">Test</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</body>
+
+</html>
