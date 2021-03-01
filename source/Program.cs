@@ -100,10 +100,6 @@ Examples:
             var req = new RequestHelper(tokens);
             var respons = req.MakeRequest(res, method, data);
             Console.WriteLine(respons);
-
-#if DEBUG
-            Console.ReadKey();
-#endif
         }
         
         public class Tokens
@@ -293,7 +289,7 @@ Access token secret=
                 baseString += paramString;
 
                 var signatureKey = Uri.EscapeDataString(Tokens.AppSecret) + "&" + Uri.EscapeDataString(Tokens.AccessSecret);
-                var hasher = HMAC.Create();
+                var hasher = HMACSHA1.Create("HMACSHA1");
                 hasher.Key = Encoding.UTF8.GetBytes(signatureKey);
                 var rawSignature = hasher.ComputeHash(Encoding.UTF8.GetBytes(baseString));
                 var oAuthSignature = Convert.ToBase64String(rawSignature);
