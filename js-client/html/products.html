@@ -20,11 +20,11 @@
 <div v-if="metaProducts">
     <ul>
         <li v-for="item in metaProducts"  :key="item.metaproduct.idMetaproduct">
-            {{ item.metaproduct.idMetaproduct }} {{ item.metaproduct.enName }}
+            {{ item.metaproduct.idMetaproduct }} {{ item.metaproduct.enName }} ({{ item.product.map(x => x.expansionName).join('; ') }})
         </li>
     </ul>
 </div>
 
 Name <input v-model="newArticle">
- <button v-on:click="search(newArticle)">Product search</button>
- <button v-on:click="searchMeta(newArticle)">Meta search</button>
+ <button v-on:click="products = search(newArticle)">Product search</button>
+ <button v-on:click="metaProducts = searchMeta(newArticle)">Meta search</button>

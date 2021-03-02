@@ -9,6 +9,10 @@ function sig(str, secret) {
     return CryptoJS.enc.Base64.stringify(hash);
 }
 
+const fixedencodeURIComponent = (str) => {
+    return encodeURIComponent(str).replace(/'/g,"%27");
+}
+
 let makeAuthHeader = (url, method, appToken, appSecret, accessToken, accessSecret) => {
     let utc = () => {
         return Math.floor((new Date().getTime())/1000);
@@ -40,8 +44,8 @@ let makeAuthHeader = (url, method, appToken, appSecret, accessToken, accessSecre
     {
         if (item[0] != "realm")
         {
-            const key = encodeURIComponent(item[0]);
-            const val = escape(item[1]);
+            const key = fixedencodeURIComponent(item[0]);
+            const val = fixedencodeURIComponent(item[1]);
             encodedParams.push(key + "=" + val);
         }
     }
@@ -49,17 +53,17 @@ let makeAuthHeader = (url, method, appToken, appSecret, accessToken, accessSecre
     encodedParams.sort((a,b) => a > b ? 1 : -1);
 
     var paramStrings = encodedParams.join("&");
-    var paramString = encodeURIComponent(paramStrings);
+    var paramString = fixedencodeURIComponent(paramStrings);
 
-    var baseString = method + "&" + encodeURIComponent(uriParts[0]) + "&" + paramString;
+    var baseString = method + "&" + fixedencodeURIComponent(uriParts[0]) + "&" + paramString;
 
-    var signatureKey = encodeURIComponent(appSecret) + "&" + encodeURIComponent(accessSecret);
+    var signatureKey = fixedencodeURIComponent(appSecret) + "&" + fixedencodeURIComponent(accessSecret);
 
     var oAuthSignature = sig(baseString, signatureKey);
 
     headers["oauth_signature"] = oAuthSignature;
 
-    var headerParamStrings = Object.entries(headers).map(x => x[0] + "=\"" + x[1] + "\"");
+    var headerParamStrings = Object.entries(headers).map(x => x[0] + "=\"" + fixedencodeURIComponent(x[1]) + "\"");
     var authHeader = "OAuth " + headerParamStrings.join(", ");
 
     return authHeader;
@@ -92,6 +96,9 @@ let mkmapi = (baseUrl, appToken, appSecret, accessToken, accessSecret) => {
             });
             
             if (response.ok) {
+                if (response.status === 204) {
+                    return { data: null };
+                }
                 return {
                     data: await response.json()
                 };

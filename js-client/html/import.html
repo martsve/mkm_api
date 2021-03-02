@@ -1,0 +1,85 @@
+<div class="import">
+    <div>
+        <h1>Import</h1>
+        <div>
+            <textarea v-on:change="parsedItem = parseData(importText)" v-model="importText" placeholder="Paste exported data here"></textarea>
+        </div>
+    </div>
+
+    <div>
+        <h1>Parsed data</h1>
+            <div class="scroll">
+            <table class="border-table" v-if="parsedItem">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>NAME</th>
+                        <th>SET</th>
+                        <th>CONDITION</th>
+                        <th>LANG</th>
+                        <th>FOIL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="item in parsedItem"  :key="item.uuid">
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.setName }}</td>
+                        <td>{{ item.condition }}</td>
+                        <td>{{ item.lang }}</td>
+                        <td>{{ item.foil ? "X" : "" }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<button v-on:click="importNew(parsedItem); importText = ''; parsedItem = [];">Save to Unimported</button>
+<button v-on:click="lookupMissingItems()">Match w Cardmarket</button>
+<button v-on:click="importToCardmarket()">Import matches</button>
+
+<button v-on:click="clearUnimported()">Clear Unimported</button>
+
+<h1>Unimported stock</h1>
+<table class="border-table" v-if="savedItems">
+    <tr>
+        <th>ID</th>
+        <th>NAME</th>
+        <th>SET</th>
+        <th>CONDITION</th>
+        <th>LANG</th>
+        <th>FOIL</th>
+        <th>STATUS</th>
+        <th>WARNINGS</th>
+        <th>ERRORS</th>
+    </tr>
+
+    <tr v-for="item in savedItems"  :key="item.uuid">
+        <td>{{ item.id }}</td>
+        <td>
+            <span v-bind:class="{ strike: (item?.newName?.length || 0) > 0 }">{{item.name}}</span>
+            <span v-if="item.newName"><br />{{item.newName}}</span>
+        </td>
+        <td>
+            <span v-bind:class="{ strike: (item?.newSetName?.length || 0) > 0 }">{{item.setName}}</span>
+            <span v-if="item.newSetName"><br />{{item.newSetName}}</span>
+        </td>
+        <td>{{ item.condition }}</td>
+        <td>{{ item.lang }}</td>
+        <td>{{ item.foil ? "X" : "" }}</td>
+        <td>
+            <div v-if='item.status == "lookup"' class='spinner xsmall'></div>
+            <span v-if='item.status !== "lookup"'>
+                {{ item.status }}
+            </span>
+        </td>
+        <td>
+            {{ item.warnings.map(x => x.key + ': ' + x.value).join(', ') }}
+            <span v-if="item.warnings.length">Alt: {{ item.warnings.filter(x => x.alt).map(x => x.alt.join(', ')).join(', ') }}</span>
+        </td>
+        <td>
+            {{ item.errors.map(x => x.key + ': ' + x.value).join(', ') }}
+            <span v-if="item.errors.length">Alt: {{ item.errors.filter(x => x.alt).map(x => x.alt.join(', ')).join(', ') }}</span>
+        </td>
+    </tr>
+</table>

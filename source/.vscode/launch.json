@@ -11,7 +11,7 @@
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/bin/Debug/net5.0/win-x64/mkm.dll",
-            "args": ["-j", "get", "products/find?search=Jace%2C%20Vryn%27s%20Prodigy&idGame=1&idLanguage=1&maxResults=100&start=0"],
+            "args": ["-j", "get", "metaproducts/find?search=Lim-D%C3%BBl%27s%20Vault&idGame=1&idLanguage=1&maxResults=100&start=0&exact=false"],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",

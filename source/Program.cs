@@ -298,7 +298,7 @@ Access token secret=
                 _headerParams.Add("oauth_signature", oAuthSignature);
 
                 var headerParamStrings =
-                    _headerParams.Select(parameter => parameter.Key + "=\"" + parameter.Value + "\"").ToList();
+                    _headerParams.Select(parameter => parameter.Key + "=\"" + Uri.EscapeDataString(parameter.Value) + "\"").ToList();
 
                 var authHeader = "OAuth " + string.Join<string>(", ", headerParamStrings);
 
