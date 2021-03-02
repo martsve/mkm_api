@@ -3,6 +3,8 @@ Cardmarket JavaScript client is availible at: **mkmapi.js**.
 
 Example of usage:
 
+      import MkmApi from './mkmapi.js';
+
       let token = {
             baseUrl: 'https://api.cardmarket.com/ws/v2.0/',
             appToken: '...',
