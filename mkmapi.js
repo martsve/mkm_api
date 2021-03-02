@@ -98,48 +98,54 @@ let makeAuthHeader = (url, method, appToken, appSecret, accessToken, accessSecre
     return authHeader;
 };
 
-let mkmapi = (baseUrl, appToken, appSecret, accessToken, accessSecret) => {
-    return ({
-        send: async (options) => {
-            let resource = options.resource;
-            let method = options.method.toUpperCase();
-            let data = options.data;
+class MkmApi {
+    constructor(baseUrl, appToken, appSecret, accessToken, accessSecret) {
+        this.baseUrl = baseUrl;
+        this.appToken = appToken;
+        this.appSecret = appSecret;
+        this.accessToken = accessToken;
+        this.accessSecret = accessSecret;
+    }
 
-            let url = baseUrl + 'output.json/' + resource;
-            let authHeader = makeAuthHeader(url, method, appToken, appSecret, accessToken, accessSecret);
+    async send(resourceString, methodString, dataObject) {
+        let resource = resourceString;
+        let method = methodString.toUpperCase();
+        let body = dataObject ? createXml(dataObject) : undefined;
 
-            console.log('[MKMAPI] Request ' + method + ' ' + url);
-            const response = await fetch(url, {
-                method: method,
-                // mode: 'no-cors',
-                cache: 'no-cache',
-                credentials: 'omit',
-                headers: {
-                    'Content-Type': 'application/xml',
-                    'Authorization': authHeader,
-                    'Accept': 'application/json',
-                },
-                redirect: 'follow',
-                referrerPolicy: 'no-referrer',
-                body: data ? createXml(data) : undefined
-            });
-            
-            if (response.ok) {
-                if (response.status === 204) {
-                    return { data: null };
-                }
-                return {
-                    data: await response.json()
-                };
-            } else {
-                console.error("[MKMAPI] Error: " + response.status);
-                return {
-                    error: response.status || "-1",
-                    header: response.header || "unexpected error",
-                };
+        let url = this.baseUrl + 'output.json/' + resource;
+        let authHeader = makeAuthHeader(url, method, this.appToken, this.appSecret, this.accessToken, this.accessSecret);
+
+        console.log('[MKMAPI] Request ' + method + ' ' + url);
+        const response = await fetch(url, {
+            method: method,
+            // mode: 'no-cors',
+            cache: 'no-cache',
+            credentials: 'omit',
+            headers: {
+                'Content-Type': 'application/xml',
+                'Authorization': authHeader,
+                'Accept': 'application/json',
+            },
+            redirect: 'follow',
+            referrerPolicy: 'no-referrer',
+            body: body
+        });
+        
+        if (response.ok) {
+            if (response.status === 204) {
+                return { data: null };
             }
-        },
-    });
+            return {
+                data: await response.json()
+            };
+        } else {
+            console.error("[MKMAPI] Error: " + response.status);
+            return {
+                error: response.status || "-1",
+                header: response.header || "unexpected error",
+            };
+        }
+    }
 };
 
-export default mkmapi;
+export default MkmApi;

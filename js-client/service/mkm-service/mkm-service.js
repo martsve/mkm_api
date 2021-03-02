@@ -1,4 +1,4 @@
-import mkmapi from './mkmapi.js';
+import MkmApi from './mkmapi.js';
 
 let idGame = 1;
 let idLanguage = 1;
@@ -18,12 +18,8 @@ window.methods = {
         return this.send('delete', resource, data);
     },
     send: async function (method, resource, data) {
-        const api = mkmapi(this.token.Url, this.token.AppToken, this.token.AppSecret, this.token.AccessToken, this.token.AccessSecret);
-        return await api.send({
-            resource: resource,
-            method: method,
-            data: data
-        });
+        const api = new MkmApi(this.token.Url, this.token.AppToken, this.token.AppSecret, this.token.AccessToken, this.token.AccessSecret);
+        return await api.send(resource, method, data);
     },
     getProducts: async function () {
         let result = await this.get('productlist');

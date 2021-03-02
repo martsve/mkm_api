@@ -2,6 +2,7 @@
 Cardmarket JavaScript client is availible at: **mkmapi.js**.
 
 Example of usage:
+
       let token = {
             baseUrl: 'https://api.cardmarket.com/ws/v2.0/',
             appToken: '...',
@@ -10,17 +11,10 @@ Example of usage:
             accessSecret: '...',
       };
 
-      const mkmRequest = async (token, method, resource, data) => {
-            const api = mkmapi(token.baseUrl, token.appToken, token.appSecret, token.accessToken, token.accessSecret);
-            return await api.send({
-                  resource: resource,
-                  method: method,
-                  data: data
-            });
-      };
+      const api = new MkmApi(token.baseUrl, token.appToken, token.appSecret, token.accessToken, token.accessSecret);
 
-      let getAccountResult = mkmRequest(token, 'get', 'account');
-      let postStockResult = mkmRequest(token, 'post', 'stock', { 
+      let getAccountResult = await api.send('get', 'account');
+      let postStockResult = await api.send('post', 'stock', { 
         request: {
             article: [{
                 idProduct: 327170,
