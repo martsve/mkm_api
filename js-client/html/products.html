@@ -1,0 +1,30 @@
+<h1>Products</h1>
+<div v-if="productLoading == 'ok'">
+    <ul>
+        <li v-for="item in products"  :key="item.id">
+            {{ item.id }} {{ item.name }} {{ item.exp }} {{ item.rarity }}
+        </li>
+    </ul>
+</div>
+
+<div v-if="productLoading == 'loading'" class="spinner-container">
+    <div class="spinner small"></div>
+</div>
+
+<div v-if="productLoading == 'error'" class="error">
+    Failed to load products.
+</div>
+
+
+<h1>Meta products</h1>
+<div v-if="metaProducts">
+    <ul>
+        <li v-for="item in metaProducts"  :key="item.metaproduct.idMetaproduct">
+            {{ item.metaproduct.idMetaproduct }} {{ item.metaproduct.enName }}
+        </li>
+    </ul>
+</div>
+
+Name <input v-model="newArticle">
+ <button v-on:click="search(newArticle)">Product search</button>
+ <button v-on:click="searchMeta(newArticle)">Meta search</button>

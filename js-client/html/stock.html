@@ -1,0 +1,17 @@
+<div v-if="stockLoading == 'ok'">
+    <ul>
+        <li v-for="item in stock"  :key="item.idArticle">
+            {{ item.count }}x {{ item.product.enName }} ({{ item.product.expIcon }}, {{ item.product.rarity }}) {{ item.price }}{{ item.currencyCode }} [{{ item.condition }}] *{{ item.isFoil }}
+        </li>
+    </ul>
+</div>
+
+<div v-if="stockLoading == 'loading'" class="spinner-container">
+    <div class="spinner small"></div>
+</div>
+
+<div v-if="stockLoading == 'error'" class="error">
+    Failed to load stock.
+</div>
+
+<button v-on:click="getStock()">Reload</button>

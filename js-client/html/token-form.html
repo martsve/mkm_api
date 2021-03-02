@@ -1,0 +1,55 @@
+<link rel="stylesheet" href="./css/token-form.css">
+
+<div class="tokenForm">
+    <form onsubmit="event.preventDefault(); return false;">
+        <div class="form-row">
+            <label>
+                <span>App Token</span>
+                <input v-model="token.AppToken" placeholder="App Token">
+            </label>
+        </div>
+        <div class="form-row">
+            <label>
+                <span>AppSecret</span>
+                <input v-model="token.AppSecret" placeholder="AppSecret">
+            </label>
+        </div>
+
+        <div class="form-row">
+            <label>
+                <span>AccessToken</span>
+                <input v-model="token.AccessToken" placeholder="AccessToken">
+            </label>
+        </div>
+
+        <div class="form-row">
+            <label>
+                <span>AccessSecret</span>
+                <input v-model="token.AccessSecret" placeholder="AccessSecret">
+            </label>
+        </div>
+
+        <div class="form-row">
+            <label>
+                <span>Url</span>
+                <input v-model="token.Url" placeholder="Url">
+            </label>
+        </div>
+
+        <div class="form-row">
+            <span></span>
+            <button type="submit" v-on:click="saveToken">Save token</button>
+            <button v-on:click="resetToken" style="margin-left: 5em">Reset</button>
+        </div>
+
+        <div class="form-row">
+            <span></span>
+            <button type="submit" v-on:click="testToken">Test</button>
+        </div>
+
+    </form>
+
+    <div class="tokenTestOutput" v-if="tokenTestResult !== null"
+        v-bind:class="{ error: tokenTestResult === false }">{{ tokenTestResponse }}</div>
+    </div>
+</div>

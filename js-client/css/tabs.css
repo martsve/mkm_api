@@ -1,0 +1,11 @@
+.tabs {
+    border-bottom: 0.2em solid #ffcccc;
+    
+}
+.tabs button {
+    border-top-left-radius: 1em;
+    border-top-right-radius: 1em;
+}
+.tabs .active {
+    background-color: #ffcccc;
+}

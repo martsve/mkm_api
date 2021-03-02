@@ -32,7 +32,7 @@ let makeAuthHeader = (url, method, appToken, appSecret, accessToken, accessSecre
         var parts = parameter.split('=');
         var key = parts[0];
         var value = parts.length > 1 ? parts[1] : "";
-        headers[key] = value;
+        headers[key] = decodeURIComponent(value);
     }
 
     var encodedParams = [];
@@ -41,7 +41,7 @@ let makeAuthHeader = (url, method, appToken, appSecret, accessToken, accessSecre
         if (item[0] != "realm")
         {
             const key = encodeURIComponent(item[0]);
-            const val = encodeURIComponent(item[1]);
+            const val = escape(item[1]);
             encodedParams.push(key + "=" + val);
         }
     }
@@ -102,7 +102,7 @@ let mkmapi = (baseUrl, appToken, appSecret, accessToken, accessSecret) => {
                     header: response.header || "unexpected error",
                 };
             }
-        }
+        },
     });
 };
 

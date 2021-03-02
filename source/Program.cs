@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Web;
 using Newtonsoft.Json;
 
 namespace MkmApi
@@ -272,7 +273,7 @@ Access token secret=
                     var parts = parameter.Split('=');
                     var key = parts[0];
                     var value = parts.Count() > 1 ? parts[1] : "";
-                    _headerParams.Add(key, value);
+                    _headerParams.Add(key, Uri.UnescapeDataString(value));
                 }
 
                 var encodedParams = new SortedDictionary<string, string>();

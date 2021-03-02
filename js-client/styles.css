@@ -1,3 +1,7 @@
+/*
+ Common styles
+*/
+
 * {
     box-sizing: border-box;
     font-size: 12px;
@@ -5,6 +9,7 @@
     border: 0;
     margin: 0;
     padding: 0;
+    list-style: none;
 }
 
 input {
@@ -28,19 +33,71 @@ button:active {
             box-shadow: inset 0px 0px 5px #c1c1c1;
     outline: none;
 }
+
 button[type=submit] {
-    padding: 1em;
-    border-radius: 0.1em;
     background-color: #ccffcc;
 }
 
-.tokenForm {
-    margin: 1em;
+
+/*
+    Loading screen
+*/
+.loader {
+    background: white;
+    position: absolute;
+    z-index: 999999;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.tokenForm .form-row {
-    margin-bottom: 0.5em;
+
+.loader.finished {
+    display: none;
 }
-.tokenForm .form-row span {
-    width: 10em;
-    display: inline-block;
+:root {
+    --s-loader-wrapper-bg-color: rgb(21, 22, 43);
+    --s-loader-width: 20vmin;
+    --s-loader-height: var(--s-loader-width);
+    --s-loader-border-color-trans: rgba(29, 161, 242, 0.2);
+    --s-loader-border-color-full: rgb(29, 161, 242);
+  }
+
+.spinner-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2em;
+}
+.spinner.small {
+    width: 2em;
+    height: 2em;
+    margin: auto;
+}
+.spinner {
+    width: var(--s-loader-width);
+    height: var(--s-loader-height);
+  
+    border: 5px solid var(--s-loader-border-color-trans);
+    border-left-color: var(--s-loader-border-color-full);
+    border-radius: 50%;
+    background: transparent;
+  
+    animation-name: rotate-s-loader;
+    animation-iteration-count: infinite;
+    animation-duration: 1s;
+    animation-timing-function: linear;
+    position: relative;
+}
+
+@keyframes rotate-s-loader {
+    from {
+        transform: rotate(0);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
