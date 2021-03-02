@@ -5,6 +5,7 @@
 .tabs button {
     border-top-left-radius: 1em;
     border-top-right-radius: 1em;
+    margin-right: 0.2em;
 }
 .tabs .active {
     background-color: #ffcccc;

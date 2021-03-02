@@ -96,11 +96,9 @@
         </td>
         <td>
             {{ item.warnings.map(x => x.key + ': ' + x.value).join(', ') }}
-            <span v-if="item.warnings.length">Alt: {{ item.warnings.filter(x => x.alt).map(x => x.alt.join(', ')).join(', ') }}</span>
         </td>
         <td>
             {{ item.errors.map(x => x.key + ': ' + x.value).join(', ') }}
-            <span v-if="item.errors.length">Alt: {{ item.errors.filter(x => x.alt).map(x => x.alt.join(', ')).join(', ') }}</span>
         </td>
         <td><button v-if="item.id" v-on:click="lookupProduct(item.id)">Lookup</button></td>
     </tr>

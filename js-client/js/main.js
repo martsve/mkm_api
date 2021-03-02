@@ -287,6 +287,17 @@ let main = () => {
             lookupProduct: async function (id) {
                 let data = (await this.get('products/' + id))?.data?.product;
                 console.log(JSON.stringify(data));
+            },
+            getPrices: async function() {
+                //var result = await this.get('games/1/expansions');
+                //var list = result.data.expansion.map(x => ({ id: x.idExpansion, name: x.enName }));
+                let expansions = new Map();
+                for (let item of this.stock) {
+                    expansions.set(item.product.expIcon, 'ok');
+                }
+                let expIds = Array.from(expansions.keys());
+                let res = await this.get('expansions/' + expIds[0] + '/singles');
+                console.log(res);
             }
         }
     });
