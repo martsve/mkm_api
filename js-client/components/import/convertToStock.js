@@ -1,5 +1,3 @@
-import json2xml from './json2xml.js';
-
 const toLangId = (txt) => {
     return {
         EN: 1
@@ -7,7 +5,7 @@ const toLangId = (txt) => {
 }
 
 export const convertToStock = (items) => {
-    let obj = {
+    return {
         request: {
             article: items.map(x => ({
                 idProduct: x.id,
@@ -20,10 +18,6 @@ export const convertToStock = (items) => {
             }))
         }
     };
-
-    const xml = '<?xml version="1.0" encoding="UTF-8" ?>' + json2xml(obj);
-
-    return xml;
 }
 
 

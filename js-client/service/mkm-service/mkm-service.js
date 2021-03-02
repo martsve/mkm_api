@@ -31,7 +31,7 @@ window.methods = {
         if (result.data) {
             console.log(result.data);
             /// https://github.com/imaya/zlib.js/blob/develop/README.en.md
-            const bytes = CryptoJS.enc.Base64.parse(result.data.productsfile);
+            const bytes = result.data.productsfile;
             var gunzip = new Zlib.Gunzip(bytes);
             var plain = gunzip.decompress();
             console.log('plain', plain);
