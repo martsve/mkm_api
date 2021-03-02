@@ -1,16 +1,47 @@
 # js-client
-Cardmarket JavaScript client is found in the js-client folder (js-client/js/mkmapi.js).
+Cardmarket JavaScript client is availible at: **mkmapi.js**.
+
+Example of usage:
+      let token = {
+            baseUrl: 'https://api.cardmarket.com/ws/v2.0/',
+            appToken: '...',
+            appSecret: '...',
+            accessToken: '...',
+            accessSecret: '...',
+      };
+
+      const mkmRequest = async (token, method, resource, data) => {
+            const api = mkmapi(token.baseUrl, token.appToken, token.appSecret, token.accessToken, token.accessSecret);
+            return await api.send({
+                  resource: resource,
+                  method: method,
+                  data: data
+            });
+      };
+
+      let getAccountResult = mkmRequest(token, 'get', 'account');
+      let postStockResult = mkmRequest(token, 'post', 'stock', { 
+        request: {
+            article: [{
+                idProduct: 327170,
+                count: 1,
+                idLanguage: 'EN',
+                comments: 'imported with mkmapi',
+                price: 1000000,
+                condition: 'NM',
+                isFoil: false
+            }]
+        }
+      });
 
 You can test it at https://martsve.github.io/mkm_api/js-client/
-
-**To be done** 
-It currently support
-- testing your accedss tokens
+The test client currently support
+- testing your access tokens
 - listing your stock
 - searching for products
 - parsing a CSV export from CardCastle and match cards to CardMarket products and importing them to your stock
 
-# mkm_api
+# mkm_api for command line
 MagicCardMarket API 1.1/2.0 accessor
 
 This program is a simple executable file to communicate simply with the MKM API v1.1/v2.0 (An Oauth wrapper). 
