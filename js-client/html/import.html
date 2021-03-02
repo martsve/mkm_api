@@ -36,8 +36,9 @@
 </div>
 <button v-on:click="importNew(parsedItem); importText = ''; parsedItem = [];">Save to Unimported</button>
 <button v-on:click="lookupMissingItems()">Match w Cardmarket</button>
-<button v-on:click="importToCardmarket()">Import matches</button>
+<button v-on:click="importToCardmarket()">Import to Cardmarket</button>
 
+<button v-on:click="clearIds()">Clear ID</button>
 <button v-on:click="clearUnimported()">Clear Unimported</button>
 
 <h1>Unimported stock</h1>
@@ -52,25 +53,45 @@
         <th>STATUS</th>
         <th>WARNINGS</th>
         <th>ERRORS</th>
+        <th>LOG</th>
     </tr>
 
     <tr v-for="item in savedItems"  :key="item.uuid">
         <td>{{ item.id }}</td>
         <td>
-            <span v-bind:class="{ strike: (item?.newName?.length || 0) > 0 }">{{item.name}}</span>
-            <span v-if="item.newName"><br />{{item.newName}}</span>
+            <span v-if="(item?.oldName?.length || 0) > 0" v-bind:class="{ strike: (item?.oldName?.length || 0) > 0 }">{{item.oldName}}<br /></span>
+            <input v-model="item.name">
         </td>
         <td>
-            <span v-bind:class="{ strike: (item?.newSetName?.length || 0) > 0 }">{{item.setName}}</span>
-            <span v-if="item.newSetName"><br />{{item.newSetName}}</span>
+            <span v-if="(item?.oldSetName?.length || 0) > 0" v-bind:class="{ strike: (item?.oldSetName?.length || 0) > 0 }">{{item.oldSetName}}</span>
+            <select v-if="item.altSet" v-model="item.setName">
+                <option>{{item.setName}}</option>
+                <option v-if="item.oldSetName">{{item.oldSetName}}</option>
+                <option v-for="opt in item.altSet">{{opt}}</option>
+            </select>
         </td>
-        <td>{{ item.condition }}</td>
+        <td>
+            <select v-model="item.condition">
+                <option value="MT">Mint</option>
+                <option value="NM">Near Mint</option>
+                <option value="EX">Excellent</option>
+                <option value="GD">Good</option>
+                <option value="LP">Light Played</option>
+                <option value="PL">Played</option>
+                <option value="PO">Poor</option>
+            </select>
+        </td>
         <td>{{ item.lang }}</td>
-        <td>{{ item.foil ? "X" : "" }}</td>
+        <td>
+            <select v-if="item.altSet" v-model="item.foil">
+                <option v-bind:value="true">Yes</option>
+                <option v-bind:value="false">No</option>
+            </select>
+        </td>
         <td>
             <div v-if='item.status == "lookup"' class='spinner xsmall'></div>
             <span v-if='item.status !== "lookup"'>
-                {{ item.status }}
+                <button v-on:click="resetStatus(item)">{{ item.status }}</button>
             </span>
         </td>
         <td>
@@ -81,5 +102,6 @@
             {{ item.errors.map(x => x.key + ': ' + x.value).join(', ') }}
             <span v-if="item.errors.length">Alt: {{ item.errors.filter(x => x.alt).map(x => x.alt.join(', ')).join(', ') }}</span>
         </td>
+        <td><button v-if="item.id" v-on:click="lookupProduct(item.id)">Lookup</button></td>
     </tr>
 </table>

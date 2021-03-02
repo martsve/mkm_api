@@ -7,6 +7,12 @@ const toKey = (val) => {
 
 const conditions = {
   "nearmint": "nm",
+  "mint": "MT",
+  "excellent": "ex",
+  "good": "gd",
+  "lightplayed": "lp",
+  "played": "pl",
+  "poor": "po",
 };
 const mapCondition = (val) => { 
   if (!val) return val;
@@ -22,6 +28,7 @@ const mapLang = (val) => {
 }
 
 const sets = {
+  "Commander 2011": "Commander",
   "Core Set 2020": "Core 2020",
   "Rivals of Ixalan Promos": "Rivals of Ixalan: Promos",
   "Dominaria Promos": "Dominaria: Promos",
@@ -39,8 +46,10 @@ const ParseCsv = (text) => {
 
   var cards = CSVToArray(text.trim(), delim);
   
-  var header = cards[0];
-  cards.shift();
+  var header = delim ? cards[0] : ['Name'];
+  if (delim) {
+    cards.shift();
+  }
 
   var headerIndex = {};
   header.forEach((val) => {
@@ -51,31 +60,23 @@ const ParseCsv = (text) => {
     function get(inputKey, invoke) {
       let key = toKey(inputKey);
       var val = headerIndex[key] !== undefined && headerIndex[key] > -1 ? item[headerIndex[key]] : undefined;
+      val = val?.trim();
       if (invoke && val !== undefined) val = invoke(val);
       return val;
     }
 
-    // eslint-disable-next-line
-    function getRaw() {
-      var raw = {};
-      header.forEach((val) => {
-        raw[val] = item[headerIndex[val]];
-      });
-      return raw;
-    }
-    
     var card = {
       errors: [],
       warnings: [],
       status: 'parsed',
       id: get("Id"),
       name: get("Name") || get("Card Name"),
-      count: get("QuantityX", x => parseInt(x.replace('x', ''))),
+      count: get("QuantityX", x => parseInt(x.replace('x', ''))) || get("Count", x => parseInt(x)) || 1,
       setCode: get("Edition code"),
       setName: get("Set Name", x => mapSet(x)),
       condition: get("Condition", x => mapCondition(x)),
       number: get("Collector's number"),
-      foil: get("Foil", x => x === "Foil" || x === true),
+      foil: get("Foil", x => x === "Foil" || x === true) || false,
       lang: get("Language", x => mapLang(x)),
       price: get("Price (total)", x => parseFloat(x)),
       currency: get("Currency"),

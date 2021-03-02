@@ -1,3 +1,15 @@
+# js-client
+Cardmarket JavaScript client is found in the js-client folder (js-client/js/mkmapi.js).
+
+You can test it at https://martsve.github.io/mkm_api/js-client/
+
+**To be done** 
+It currently support
+- testing your accedss tokens
+- listing your stock
+- searching for products
+- parsing a CSV export from CardCastle and match cards to CardMarket products and importing them to your stock
+
 # mkm_api
 MagicCardMarket API 1.1/2.0 accessor
 

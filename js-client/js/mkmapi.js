@@ -86,13 +86,13 @@ let mkmapi = (baseUrl, appToken, appSecret, accessToken, accessSecret) => {
                 cache: 'no-cache',
                 credentials: 'omit',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/xml',
                     'Authorization': authHeader,
                     'Accept': 'application/json',
                 },
                 redirect: 'follow',
                 referrerPolicy: 'no-referrer',
-                body: data ? JSON.stringify(data) : undefined
+                body: data ? data : undefined
             });
             
             if (response.ok) {

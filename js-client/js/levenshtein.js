@@ -1,6 +1,6 @@
 export const levenshtein = (a, b) => {
-    if(a.length === 0) return b.length;
-    if(b.length === 0) return a.length;
+    if (!a) return b.length;
+    if (!b) return a.length;
   
     var matrix = [];
   

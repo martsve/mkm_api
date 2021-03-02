@@ -25,6 +25,11 @@
     </ul>
 </div>
 
+<div v-if="metaProductLoading == 'loading'" class="spinner-container">
+    <div class="spinner small"></div>
+</div>
+
 Name <input v-model="newArticle">
- <button v-on:click="products = search(newArticle)">Product search</button>
- <button v-on:click="metaProducts = searchMeta(newArticle)">Meta search</button>
+ <button v-on:click="productSearch(newArticle)">Product search</button>
+ <button v-on:click="metaSearch(newArticle)">Meta search</button>
+ 

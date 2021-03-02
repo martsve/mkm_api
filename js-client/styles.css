@@ -18,6 +18,9 @@ input {
     border: 0.1em solid #cccccc;
     background-color: white;
 }
+select {
+    width: 10em;
+}
 
 textarea {
     padding: 1em;

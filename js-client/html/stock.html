@@ -14,4 +14,10 @@
     Failed to load stock.
 </div>
 
-<button v-on:click="getStock()">Reload</button>
+<p>
+    <button v-on:click="getStock()">Reload</button>
+</p>
+
+<p>
+    <b>{{ stock ? stock.length : 0 }} total </b>
+</p>

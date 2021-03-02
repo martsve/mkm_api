@@ -62,16 +62,19 @@ const matchProduct = (item, meta) => {
 
     if (match.metaproduct.enName !== item.name) {
         result.status = 'warning';
-        result.warnings.push({ key: 'Name', value: 'not exact match', alt: meta.map(x => x.metaproduct.enName) });
+        result.name = match.metaproduct.enName;
+        result.altName = meta.map(x => x.metaproduct.enName);
+        result.warnings.push({ key: 'Name', value: 'Not exact match' });
     }
 
     var product = getProductBySetName(item, match.product);
     result.id = product.idProduct;
+    result.altSet = match.product.map(x => x.expansionName);
 
     if (product.expansionName !== item.setName) {
         result.status = 'warning';
         result.setName = product.expansionName;
-        result.warnings.push({ key: 'Set', value: 'Not exact match', alt: match.product.map(x => x.expansionName) });
+        result.warnings.push({ key: 'Set', value: 'Not exact match' });
     }
 
     return result;

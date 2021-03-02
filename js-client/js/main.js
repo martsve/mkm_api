@@ -1,6 +1,7 @@
 import mkmapi from './mkmapi.js';
 import ParseCsv from './parse-deck/ParseCsv.js';
 import matchProduct from './product-matcher.js';
+import convertToStock from './convertToStock.js';
 
 let main = () => {
     let tokenStorageKey = "token";
@@ -46,6 +47,7 @@ let main = () => {
         products: getStored('products'),
         productLoading: 'ok',
         newArticle: '',
+        metaProductLoading: 'ok',
         metaProducts: getStored('metaProducts'),
         importText: '',
         parsedItem: [],
@@ -111,6 +113,7 @@ let main = () => {
             },
             getStock: async function () {
                 let result = await this.get('stock');
+                console.log(JSON.stringify(result, null, 4));
                 this.stockLoading = 'loading';
                 if (result.data) {
                     this.stock = result.data.article;
@@ -138,21 +141,34 @@ let main = () => {
                     this.productLoading = 'error';
                 }                
             },
+            productSearch: async function(name) {
+                this.productLoading = 'loading';
+                this.products = await this.search(name);
+                console.log(JSON.stringify(this.products));
+                this.productLoading = 'ok';
+                this.save();
+            },
+            metaSearch: async function(name) {
+                this.metaProductLoading = 'loading';
+                this.metaProducts = await this.searchMeta(name);
+                console.log(JSON.stringify(this.metaProducts));
+                this.metaProductLoading = 'ok';
+                this.save();
+            },
             search: async function (name) {
                 let parameters = {
-                    search: name,
+                    search: name.split('//')[0].trim(),
                     idGame: idGame,
                     idLanguage: idLanguage,
                     maxResults: 100,
                     start: 0
                 };
                 var result = await this.get('products/find?' + Object.entries(parameters).map(x => x[0] + "=" + encodeURIComponent(x[1])).join('&'));
-                this.productLoading = 'ok';
                 return result.data.product.map(x => ({ id: x.idProduct, name: x.enName, exp: x.expansionName, rarity: x.rarity, number: x.number }));
             },
             searchMeta: async function (name) {
                 let parameters = {
-                    search: name,
+                    search: name.split('//')[0].trim(),
                     idGame: idGame,
                     idLanguage: idLanguage,
                     maxResults: 100,
@@ -186,6 +202,12 @@ let main = () => {
                 this.savedItems = [];
                 this.save();
             },
+            clearIds: function() {
+                for (var item of this.savedItems) {
+                    item.id = undefined;
+                }
+                this.save();
+            },
             lookupMissingItems: function () {
                 for (var item of this.savedItems.filter(x => !x.id)) {
                     item.status = 'waiting'
@@ -208,13 +230,63 @@ let main = () => {
                 item.errors = match.errors;
                 item.warnings = match.warnings;
                 item.id = match.id;
-                item.newSetName = match.setName;
+                if (match.setName) {
+                    item.oldSetName = item.setName;
+                    item.setName = match.setName;
+                    item.altSet = match.altSet;
+                }
+                if (match.name) {
+                    item.oldName = item.name;
+                    item.name = match.name;
+                    item.altName = match.altName;
+                }
+
                 this.save();
                 this.lookupItem();
             },
+            resetStatus: function (item) {
+                item.status = '';
+                item.errors = [];
+                item.warnings = [];
+                this.save();
+            },
             importToCardmarket: async function() {
-                var items = this.savedItems.filter(x => !x.id && x.errors.length == 0 && x.warnings.length == 0);
-                console.log('import', items);
+                var items = this.savedItems.filter(x => x.id && x.errors.length == 0 && x.warnings.length == 0);
+                if (!items.length) { return; }
+
+                let ii = 0;
+                let itemMap = {};
+                for (var item of items) {
+                    item.importId = (ii++).toString();
+                    itemMap[item.importId] = item;
+                    items.status = 'lookup';
+                }
+
+                var stock = convertToStock(items);
+                console.log('stock', JSON.stringify(stock, null, 2));
+                var result = await this.post('stock', stock);
+                console.log('result', JSON.stringify(result, null, 2));
+                var inserted = result?.data?.inserted || [];
+                var i = 0;
+                for (var item of inserted) {
+                    if (item.success) {
+                        let iid = item.idArticle.comments.match(/\[(\d+)\]/)[1];
+                        itemMap[iid].inserted = true;
+                    }
+                    else {
+                        let iid = item.tried.comments.match(/\[(\d+)\]/)[1];
+                        itemMap[iid].status = 'error';
+                        itemMap[iid].errors.push({ key: 'stock', value: item.error });
+                    }
+                    i++;
+                }
+
+                this.savedItems = this.savedItems.filter(x => !x.inserted);
+                this.save();
+            },
+            lookupProduct: async function (id) {
+                let data = (await this.get('products/' + id))?.data?.product;
+                console.log(JSON.stringify(data));
             }
         }
     });
