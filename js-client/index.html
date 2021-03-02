@@ -1,7 +1,9 @@
-<html>
-
+<!DOCTYPE html>
+<html lang="en-US">
 <head>
     <title>CardMarket API caller</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/png" href="cardmarket.png">
 </head>
@@ -10,14 +12,13 @@
         <div class="loader" v-bind:class="{ finished: loaded }">
             <div class="spinner"></div>
         </div>
-        <div preload="./html/all-tabs.html"></div>
+        <div preload="./components/tabs"></div>
     </div>
 
-    <script type="module" src="./js/preload.js"></script>
     <script src="./vue/vue.min.js"></script>
-    <script src="./vue/vue-router.js"></script>
     <script src="./js/crypto.js"></script>
     <script src="./js/zlib.js"></script>
     <script type="module" src="./js/main.js"></script>
+    <script type="module" src="./js/preload.js"></script>
 </body>
 </html>

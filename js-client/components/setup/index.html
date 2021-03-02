@@ -1,4 +1,67 @@
-<link rel="stylesheet" href="./css/token-form.css">
+<script>
+    let tokenStorageKey = "token";
+    let baseUrl = "https://api.cardmarket.com/ws";
+    let apiUrl = "v2.0/";
+    let idGame = 1;
+    let idLanguage = 1;
+
+    let token = getStored(tokenStorageKey, {
+        AppToken: '',
+        AppSecret: '',
+        AccessToken: '',
+        AccessSecret: '',
+        Url: baseUrl + '/' + apiUrl,
+    });
+
+    window.state = {
+        ...window.state,
+        token: token,
+        tokenTestResponse: null,
+        tokenTestResult: null,    
+    };
+
+    window.methods = {
+        ...window.methods,
+        saveToken: function () {
+            localStorage.setItem(tokenStorageKey, JSON.stringify(this.token));
+        },
+        resetToken: function () {
+            localStorage.removeItem(tokenStorageKey);
+            window.location.reload();
+        },
+        testToken: async function () {
+            var response = await this.get('account');
+            this.tokenTestResult = !response.error;
+            this.tokenTestResponse = JSON.stringify(response.error ? response.error : response.data.account, null, 2);
+            return this.tokenTestResult;
+        },
+    };
+</script>
+
+<style>
+    .tokenForm {
+        margin: 1em;
+    }
+    .tokenForm .form-row {
+        margin-bottom: 0.5em;
+    }
+    .tokenForm .form-row span {
+        width: 10em;
+        display: inline-block;
+    }
+
+    .tokenTestOutput {
+        white-space: pre;
+        font-family: consolas;
+        border: 0.1em solid green;
+        height: 200px;
+        overflow: scroll;
+        margin: 2em;
+    }
+    .tokenTestOutput.error {
+        border: 0.1em solid red;
+    }
+</style>
 
 <div class="tokenForm">
     <form onsubmit="event.preventDefault(); return false;">

@@ -1,3 +1,29 @@
+<script>
+
+    window.state = {
+        ...window.state,
+        stock: getStored('stock'),
+        stockLoading: 'ok',
+    };
+
+    window.methods = {
+        ...window.methods,
+        getStock: async function () {
+            let result = await this.get('stock');
+            console.log(JSON.stringify(result, null, 4));
+            this.stockLoading = 'loading';
+            if (result.data) {
+                this.stock = result.data.article;
+                this.stockLoading = 'ok';
+                this.save();
+            }
+            else {
+                this.stockLoading = 'error';
+            }
+        },
+    };
+</script>
+
 <div v-if="stockLoading == 'ok'">
     <ul>
         <li v-for="item in stock"  :key="item.idArticle">

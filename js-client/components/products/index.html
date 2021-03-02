@@ -1,3 +1,36 @@
+<script>
+    window.state = {
+        ...window.state,
+        products: getStored('products'),
+        productLoading: 'ok',
+        newArticle: '',
+        metaProductLoading: 'ok',
+        metaProducts: getStored('metaProducts'),
+    };
+
+    window.methods = {
+        ...window.methods,
+        productSearch: async function(name) {
+            this.productLoading = 'loading';
+            this.products = await this.search(name);
+            console.log(JSON.stringify(this.products));
+            this.productLoading = 'ok';
+            this.save();
+        },
+        metaSearch: async function(name) {
+            this.metaProductLoading = 'loading';
+            this.metaProducts = await this.searchMeta(name);
+            console.log(JSON.stringify(this.metaProducts));
+            this.metaProductLoading = 'ok';
+            this.save();
+        },
+    };
+</script>
+
+<style>
+
+</style>
+
 <h1>Products</h1>
 <div v-if="productLoading == 'ok'">
     <ul>
@@ -32,4 +65,3 @@
 Name <input v-model="newArticle">
  <button v-on:click="productSearch(newArticle)">Product search</button>
  <button v-on:click="metaSearch(newArticle)">Meta search</button>
- 

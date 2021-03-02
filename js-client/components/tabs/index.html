@@ -1,0 +1,54 @@
+<script>
+    let active = (window.location.hash.split('#/')[1] || 'token').split('/')[0];
+
+    window.state = {
+        ...window.state,
+        active: active,
+        tabs: [
+            { key: 'token', title: 'Token setup' }, 
+            { key: 'stock', title: 'Stock' },
+            { key: 'products', title: 'Products' },
+            { key: 'import', title: 'Import' },
+        ],
+    };
+
+    window.methods = {
+        ...window.methods,
+        setActive: function (tab) {
+            this.active = tab;
+            window.location.hash = '/' + tab;
+        },
+    };
+</script>
+
+<style>
+    .tabs {
+        border-bottom: 0.2em solid #ffcccc;
+        
+    }
+    .tabs button {
+        border-top-left-radius: 1em;
+        border-top-right-radius: 1em;
+        margin-right: 0.2em;
+    }
+    .tabs .active {
+        background-color: #ffcccc;
+    }
+</style>
+
+<div class="tabs">
+    <button
+        v-for="tab in tabs" 
+        :key="tab.key"
+        v-bind:class="{ active: active === tab.key}"
+        v-on:click="setActive(tab.key)">
+        {{ tab.title }}
+    </button>
+</div>
+
+<div class="contents">
+    <div v-if="active === 'token'" preload="@{CD}/import/"></div>
+    <div v-if="active === 'stock'" preload="@{CD}/stock/"></div>
+    <div v-if="active === 'products'" preload="@{CD}/products/"></div>
+    <div v-if="active === 'import'" preload="@{CD}/import/"></div>
+</div>
