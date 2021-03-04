@@ -107,42 +107,50 @@ class MkmApi {
         this.accessSecret = accessSecret;
     }
 
-    async send(resourceString, methodString, dataObject) {
-        let resource = resourceString;
+    async send(resourceString, methodString, queryParams, dataObject) {
+        let queryString = queryParams ? '?' + Object.entries(queryParams).map(x => x[0] + "=" + encodeURIComponent(x[1])).join('&') : '';
+        let resource = resourceString + queryString;
         let method = methodString.toUpperCase();
         let body = dataObject ? createXml(dataObject) : undefined;
 
         let url = this.baseUrl + 'output.json/' + resource;
         let authHeader = makeAuthHeader(url, method, this.appToken, this.appSecret, this.accessToken, this.accessSecret);
 
-        console.log('[MKMAPI] Request ' + method + ' ' + url);
-        const response = await fetch(url, {
-            method: method,
-            // mode: 'no-cors',
-            cache: 'no-cache',
-            credentials: 'omit',
-            headers: {
-                'Content-Type': 'application/xml',
-                'Authorization': authHeader,
-                'Accept': 'application/json',
-            },
-            redirect: 'follow',
-            referrerPolicy: 'no-referrer',
-            body: body
-        });
-        
-        if (response.ok) {
-            if (response.status === 204) {
-                return { data: null };
+        // console.log('[MKMAPI] Request ' + method + ' ' + url);
+            try {
+            const response = await fetch(url, {
+                method: method,
+                // mode: 'no-cors',
+                cache: 'no-cache',
+                credentials: 'omit',
+                headers: {
+                    'Content-Type': 'application/xml',
+                    'Authorization': authHeader,
+                    'Accept': 'application/json',
+                },
+                redirect: 'follow',
+                referrerPolicy: 'no-referrer',
+                body: body
+            });
+            
+            if (response.ok) {
+                if (response.status === 204) {
+                    return { data: null };
+                }
+                return {
+                    data: await response.json()
+                };
+            } else {
+                console.error("[MKMAPI] Error: " + response.status);
+                return {
+                    error: response.status || "-1",
+                    header: response.header || "unexpected error",
+                };
             }
+        }
+        catch (ex) {
             return {
-                data: await response.json()
-            };
-        } else {
-            console.error("[MKMAPI] Error: " + response.status);
-            return {
-                error: response.status || "-1",
-                header: response.header || "unexpected error",
+                error: 'Failed requesting resource: ' + ex
             };
         }
     }

@@ -1,5 +1,5 @@
 # js-client
-Cardmarket JavaScript client is availible at: **mkmapi.js**.
+Cardmarket JavaScript client is availible at: **mkmapi.js**. It includes automatic conversion of POST/PUT request from JSON objects to XML, and automatic adding of GET query parameters from JSON object.
 
 Example of usage:
 
@@ -15,7 +15,16 @@ Example of usage:
 
       const api = new MkmApi(token.baseUrl, token.appToken, token.appSecret, token.accessToken, token.accessSecret);
 
+      let findResult = await api.send('get', 'products/find', {
+            search: 'Tatyova',
+            idGame: 1,
+            idLanguage: 1,
+            maxResults: 100,
+            start: 0
+      });
+
       let getAccountResult = await api.send('get', 'account');
+      
       let postStockResult = await api.send('post', 'stock', { 
         request: {
             article: [{

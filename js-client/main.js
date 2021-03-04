@@ -29,6 +29,20 @@ let main = () => {
                 localStorage.setItem('metaProducts', JSON.stringify(this.metaProducts));
                 localStorage.setItem('savedItems', JSON.stringify(this.savedItems));
             },
+            tooltip: function (url, show) {
+                if (show) {
+                   var obj = document.createElement("div");
+                    obj.className = "tooltip"; 
+                    obj.style.top = (event.clientY + 5) + 'px';
+                    obj.style.left = (event.clientX + 30) + 'px';
+                    obj.innerHTML = "<img src='https:/" + url + "' />";
+                    document.body.appendChild(obj);
+                }
+                else {
+                    document.querySelector(".tooltip").remove();
+                }
+            },
+            
         }
     });
 

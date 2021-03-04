@@ -60,7 +60,7 @@ const matchProduct = (item, meta) => {
 
     var match = getClosestMatch(item.name, meta);
 
-    if (match.metaproduct.enName !== item.name) {
+    if (toKey(match.metaproduct.enName) !== toKey(item.name)) {
         result.status = 'warning';
         result.name = match.metaproduct.enName;
         result.altName = meta.map(x => x.metaproduct.enName);
@@ -71,7 +71,7 @@ const matchProduct = (item, meta) => {
     result.id = product.idProduct;
     result.altSet = match.product.map(x => x.expansionName);
 
-    if (product.expansionName !== item.setName) {
+    if (toKey(product.expansionName) !== toKey(item.setName)) {
         result.status = 'warning';
         result.setName = product.expansionName;
         result.warnings.push({ key: 'Set', value: 'Not exact match' });

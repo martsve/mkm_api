@@ -2,37 +2,156 @@
 
     window.state = {
         ...window.state,
-        stock: getStored('stock'),
+        stock: getStored('stock', {
+            maxResults: 100,
+            start: 0
+         }),
         stockLoading: 'ok',
+        stockLoadingAt: 0,
     };
 
     window.methods = {
         ...window.methods,
         getStock: async function () {
-            let result = await this.get('stock');
-            console.log(JSON.stringify(result, null, 4));
             this.stockLoading = 'loading';
-            if (result.data) {
-                this.stock = result.data.article;
-                this.stockLoading = 'ok';
-                this.save();
+            let stock = [];
+            let at = 1;
+            while (true) {
+                this.stockLoadingAt = at;
+                let result = await this.get('stock/' + at);
+                console.log(JSON.stringify(result, null, 4));
+                if (!result?.data?.article) {
+                    break;
+                }
+
+                for (var item of result.data.article) {
+                    stock.push(item);
+                }
+
+                if (result.data.article.length < 100) {
+                    break;
+                }
+
+                at = at + 100;
             }
-            else {
-                this.stockLoading = 'error';
+
+            this.stockLoading = 'ok';
+            this.save();
+        },
+        setComment: function () {
+            for (var item of this.stock) {
+                item.comments = ":" + item.product.enName[0];
+                item.changed = true;
             }
         },
+        updateStock: async function() {
+            var items = this.stock.filter(x => x.changed).slice(0,99);
+            if (!items.length) { return; }
+
+            for (var item of items) {
+                item.error = undefined;
+            }
+
+            var update = {
+                request: {
+                    article: items.map(x => ({
+                        idProduct: x.idProduct,
+                        idArticle: x.idArticle,
+                        count: x.count,
+                        idLanguage: x.language.idLanguage,
+                        comments: x.comments,
+                        price: x.price,
+                        condition: x.condition,
+                        isFoil: x.isFoil,
+                        isSigned: x.isSigned,
+                        isPlayset: x.isPlayset,
+                        isAltered: x.isAltered
+                    }))
+                }
+            };
+
+            console.log('stock put', JSON.stringify(update, null, 2));
+            var result = await this.put('stock', update );
+            console.log('result', JSON.stringify(result, null, 2));
+
+            for (var obj of result.data.updatedArticles) {
+                let item = this.stock.filter(x => x.idArticle === obj.idArticle)[0];
+                if (item) {
+                    item.changed = undefined;
+                    item.count = obj.count;
+                    item.language = obj.language;
+                    item.comments = obj.comments;
+                    item.price = obj.price;
+                    item.condition = obj.condition;
+                    item.isFoil = obj.isFoil;
+                    item.isSigned = obj.isSigned;
+                    item.isPlayset = obj.isPlayset;
+                    item.isAltered = obj.isAltered;
+                } 
+            }
+
+            for (var obj of result.data.notUpdatedArticles) {
+                let item = items.filter(x => x.idArticle == obj.tried.idArticle)[0];
+                if (item) {
+                    item.error = obj.error;
+                    item.changed = undefined;
+                    item.count = obj.tried.count;
+                    item.language = obj.tried.language;
+                    item.comments = obj.tried.comments;
+                    item.price = obj.tried.price;
+                    item.condition = obj.tried.condition;
+                    item.isFoil = obj.tried.isFoil;
+                    item.isSigned = obj.tried.isSigned;
+                    item.isPlayset = obj.tried.isPlayset;
+                    item.isAltered = obj.tried.isAltered;
+                } 
+                else {
+                    console.log('cant find', obj.tried.idArticle, items.map(x => x.idArticle));
+                }
+            }
+
+            this.save();
+
+            if (this.stock.filter(x => x.changed).length > 0) {
+                this.updateStock();
+            }
+        },
+        sortStock: function(key, order) {
+            let func = (item) => item.idArticle;
+            if (key == "changed") func = (item) => ((item.changed ? 'y' : 'n') + item.idArticle);
+            if (key == "isFoil") func = (item) => ((item.isFoil ? 'y' : 'n') + item.idArticle);
+            if (key == "isPlayset") func = (item) => ((item.isPlayset ? 'y' : 'n') + item.idArticle);
+            if (key == "isAltered") func = (item) => ((item.isAltered ? 'y' : 'n') + item.idArticle);
+            if (key == "isSigned") func = (item) => ((item.isSigned ? 'y' : 'n') + item.idArticle);
+            if (key == "errors") func = (item) => ((item.errors) + item.idArticle);
+            if (key == "comments") func = (item) => ((item.comments) + item.idArticle);
+
+            if (key == "price") func = (item) =>  item.price;
+            if (key == "count") func = (item) => ((item.count) + item.idArticle);
+            if (key == "name") func = (item) => ((item.product.enName) + item.idArticle);
+            if (key == "set") func = (item) => ((item.product.expansion) + item.idArticle);
+            if (key == "rarity") func = (item) => ((item.product.rarity) + item.idArticle);
+            if (key == "condition") func = (item) => ((item.condition) + item.idArticle);
+
+            this.stock.sort((a,b) => {
+                if (order) return func(a) > func(b) ? -1 : 1;
+                return func(a) > func(b) ? 1 : -1;
+            });
+        }
     };
 </script>
 
-<div v-if="stockLoading == 'ok'">
-    <ul>
-        <li v-for="item in stock"  :key="item.idArticle">
-            {{ item.count }}x {{ item.product.enName }} ({{ item.product.expIcon }}, {{ item.product.rarity }}) {{ item.price }}{{ item.currencyCode }} [{{ item.condition }}] *{{ item.isFoil }}
-        </li>
-    </ul>
-</div>
+<p>
+    <button v-on:click="getStock()">Reload</button>
+
+    <button v-on:click="updateStock()">Update changed items</button>
+
+    <button v-on:click="setComment()">Set comment</button>
+
+</p>
 
 <div v-if="stockLoading == 'loading'" class="spinner-container">
+    <b>Fetching {{ stockLoadingAt }} - {{ stockLoadingAt+100 }}</b>
     <div class="spinner small"></div>
 </div>
 
@@ -41,11 +160,53 @@
 </div>
 
 <p>
-    <button v-on:click="getStock()">Reload</button>
-
-    <button v-on:click="getPrices()">Get prices</button>
+    <b>Count: {{ stock ? stock.length : 0 }}</b><br />
+    <b>Value: {{ !stock ? 0 : Math.floor(stock.map(x => x.price).reduce((a, b) => a + b, 0)) }} €</b><br />
 </p>
 
-<p>
-    <b>{{ stock ? stock.length : 0 }} total </b>
-</p>
+<table class="border-table"  v-if="stockLoading == 'ok'">
+    <tr>
+        <th><a href="javascript:void(0)" @click='sortStock("changed", true)'>Update</a></th>
+        <th>Img</th>
+        <th><a href="javascript:void(0)" @click='sortStock("count", true)'>Count</a></th>
+        <th><a href="javascript:void(0)" @click='sortStock("name")'>Name</a></th>
+
+        <th><a href="javascript:void(0)" @click='sortStock("set")'>Set</a></th>
+
+        <th><a href="javascript:void(0)" @click='sortStock("rarity")'>Rarity</a></th>
+
+        <th><a href="javascript:void(0)" @click='sortStock("price", true)'>Price</a></th>
+        <th><a href="javascript:void(0)" @click='sortStock("condition")'>Condition</a></th>
+
+        <th><a href="javascript:void(0)" @click='sortStock("isFoil", true)'>Foil</a></th>
+        <th><a href="javascript:void(0)" @click='sortStock("isAltered", true)'>Altered</a></th>
+        <th><a href="javascript:void(0)" @click='sortStock("isSigned", true)'>Signed</a></th>
+        <th><a href="javascript:void(0)" @click='sortStock("isPlayset", true)'>Playset</a></th>
+        <th><a href="javascript:void(0)" @click='sortStock("comments", true)'>Comment</a></th>
+        <th><a href="javascript:void(0)" @click='sortStock("error", true)'>Error</a></th>
+    </tr>
+    <tr v-for="item in stock" :key="item.idArticle">
+        <td><input type="checkbox" v-model="item.changed"></td>
+        <td><a href="javascript:void(0)" @mouseover="tooltip(item.product.image, true)" @mouseout="tooltip(item.product.image, false)">IMG</a></td>
+        <td><input disabled v-on:input="item.changed = true" v-model="item.count" type="number" min="0" max="100"></td>
+        <td>{{ item.product.enName }}</td>
+        <td>{{ item.product.expansion }}</td>
+        <td>{{ item.product.rarity }}</td>
+        <td><input v-on:input="item.changed = true" v-model="item.price" type="number" step="0.01" min="0.02"></td>
+        <td><select class="small" v-on:input="item.changed = true" v-model="item.condition">
+            <option value="MT">Mint</option>
+            <option value="NM">Near Mint</option>
+            <option value="EX">Excellent</option>
+            <option value="GD">Good</option>
+            <option value="LP">Light Played</option>
+            <option value="PL">Played</option>
+            <option value="PO">Poor</option>
+        </select></td>
+        <td><input v-on:input="item.changed = true" type="checkbox" v-model="item.isFoil"></td>
+        <td><input v-on:input="item.changed = true" type="checkbox" v-model="item.isPlayset"></td>
+        <td><input v-on:input="item.changed = true" type="checkbox" v-model="item.isSigned"></td>
+        <td><input v-on:input="item.changed = true" type="checkbox" v-model="item.isAltered"></td>
+        <td><input v-on:input="item.changed = true" v-model="item.comments"></td>
+        <td>{{ item.error }}</td>
+    </tr>
+</table>

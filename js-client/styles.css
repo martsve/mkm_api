@@ -22,9 +22,17 @@ input {
     border: 0.1em solid #cccccc;
     background-color: white;
 }
+input[type=number] {
+    width: 7em;
+}
+
 select {
     width: 10em;
 }
+select.small {
+    width: 7em;
+}
+
 
 textarea {
     padding: 1em;
@@ -148,4 +156,10 @@ button[type=submit] {
 
 .strike {
     text-decoration: line-through;
+}
+
+.tooltip {
+    position: absolute;
+    display: inline-block;
+    z-index: 100000;
 }

@@ -57,16 +57,25 @@
             }
 
             item.status = 'lookup';
-            let meta = await this.searchMeta(item.name);
+            let meta;
+            try {
+                meta = await this.searchMeta(item.name);
+            }
+            catch (ex) {
+                item.status = 'error';
+                item.errors.push({ key: 'fetch', val: ex.message });
+                this.lookupItem();
+                return;
+            }
             var match = matchProduct(item, meta);
             item.status = match.status;
             item.errors = match.errors;
             item.warnings = match.warnings;
             item.id = match.id;
+            item.altSet = match.altSet;
             if (match.setName) {
                 item.oldSetName = item.setName;
                 item.setName = match.setName;
-                item.altSet = match.altSet;
             }
             if (match.name) {
                 item.oldName = item.name;
@@ -84,7 +93,7 @@
             this.save();
         },
         importToCardmarket: async function() {
-            var items = this.savedItems.filter(x => x.id && x.errors.length == 0 && x.warnings.length == 0);
+            var items = this.savedItems.filter(x => x.id && x.errors.length == 0 && x.warnings.length == 0).slice(0,99);
             if (!items.length) { return; }
 
             let ii = 0;
@@ -131,15 +140,23 @@
             let expIds = Array.from(expansions.keys());
             let res = await this.get('expansions/' + expIds[0] + '/singles');
             console.log(res);
+        },
+        del: function(uuid) {
+            this.savedItems = this.savedItems.filter(x => x.uuid != uuid);
+            this.save();
         }
     };
 </script>
+
+<style>
+    select { width: 200px; }
+</style>
 
 <div class="import">
     <div>
         <h1>Import</h1>
         <div>
-            <textarea v-on:change="parsedItem = parseData(importText)" v-model="importText" placeholder="Paste exported data here"></textarea>
+            <textarea v-on:input="parsedItem = parseData(importText)" v-model="importText" placeholder="Paste exported data here"></textarea>
         </div>
     </div>
 
@@ -197,18 +214,19 @@
         <td>{{ item.id }}</td>
         <td>
             <span v-if="(item?.oldName?.length || 0) > 0" v-bind:class="{ strike: (item?.oldName?.length || 0) > 0 }">{{item.oldName}}<br /></span>
-            <input v-model="item.name">
+            <input v-on:input="item.id = null" v-model="item.name">
         </td>
         <td>
-            <span v-if="(item?.oldSetName?.length || 0) > 0" v-bind:class="{ strike: (item?.oldSetName?.length || 0) > 0 }">{{item.oldSetName}}</span>
-            <select v-if="item.altSet" v-model="item.setName">
+            <span v-if="(item?.oldSetName?.length || 0) > 0" v-bind:class="{ strike: (item?.oldSetName?.length || 0) > 0 }">{{item.oldSetName}}<br/></span>
+            <select v-on:input="item.id = null" v-if="item.altSet" v-model="item.setName">
                 <option>{{item.setName}}</option>
-                <option v-if="item.oldSetName">{{item.oldSetName}}</option>
                 <option v-for="opt in item.altSet">{{opt}}</option>
+                <option>--------------</option>
+                <option v-if="item.oldSetName">{{item.oldSetName}}</option>
             </select>
         </td>
         <td>
-            <select v-model="item.condition">
+            <select v-model="item.condition" class="small">
                 <option value="MT">Mint</option>
                 <option value="NM">Near Mint</option>
                 <option value="EX">Excellent</option>
@@ -237,6 +255,9 @@
         <td>
             {{ item.errors.map(x => x.key + ': ' + x.value).join(', ') }}
         </td>
-        <td><button v-if="item.id" v-on:click="lookupProduct(item.id)">Lookup</button></td>
+        <td>
+            <button v-if="item.id" v-on:click="lookupProduct(item.id)">Lookup</button>
+            <button v-on:click="del(item.uuid)">Remove</button>
+        </td>
     </tr>
 </table>

@@ -107,15 +107,16 @@ class MkmApi {
         this.accessSecret = accessSecret;
     }
 
-    async send(resourceString, methodString, dataObject) {
-        let resource = resourceString;
+    async send(resourceString, methodString, queryParams, dataObject) {
+        let queryString = queryParams ? '?' + Object.entries(queryParams).map(x => x[0] + "=" + encodeURIComponent(x[1])).join('&') : '';
+        let resource = resourceString + queryString;
         let method = methodString.toUpperCase();
         let body = dataObject ? createXml(dataObject) : undefined;
 
         let url = this.baseUrl + 'output.json/' + resource;
         let authHeader = makeAuthHeader(url, method, this.appToken, this.appSecret, this.accessToken, this.accessSecret);
 
-        console.log('[MKMAPI] Request ' + method + ' ' + url);
+        // console.log('[MKMAPI] Request ' + method + ' ' + url);
         const response = await fetch(url, {
             method: method,
             // mode: 'no-cors',
